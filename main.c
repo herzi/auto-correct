@@ -23,17 +23,28 @@
 
 #include <gtk/gtk.h>
 
+#include <glib/gi18n.h>
+
 int
 main (int   argc,
       char**argv)
 {
+        GtkWidget* view;
         GtkWidget* window;
 
         gtk_init (&argc, &argv);
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+        gtk_window_set_title (GTK_WINDOW (window), _("Auto-correction demo..."));
+        gtk_window_set_default_size (GTK_WINDOW (window), 400, 300);
         g_signal_connect (window, "destroy",
                           G_CALLBACK (gtk_main_quit), NULL);
+
+        view = gtk_text_view_new ();
+
+        gtk_widget_show (view);
+        gtk_container_add (GTK_CONTAINER (window), view);
+
         gtk_widget_show (window);
 
         gtk_main ();
