@@ -29,6 +29,7 @@ int
 main (int   argc,
       char**argv)
 {
+        GtkWidget* scrolled;
         GtkWidget* view;
         GtkWidget* window;
 
@@ -40,10 +41,15 @@ main (int   argc,
         g_signal_connect (window, "destroy",
                           G_CALLBACK (gtk_main_quit), NULL);
 
+        scrolled = gtk_scrolled_window_new (NULL, NULL);
+
         view = gtk_text_view_new ();
 
         gtk_widget_show (view);
-        gtk_container_add (GTK_CONTAINER (window), view);
+        gtk_container_add (GTK_CONTAINER (scrolled), view);
+
+        gtk_widget_show (scrolled);
+        gtk_container_add (GTK_CONTAINER (window), scrolled);
 
         gtk_widget_show (window);
 
