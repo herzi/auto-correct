@@ -25,6 +25,8 @@
 
 #include <glib/gi18n.h>
 
+#define AUTO_CORRECT_NOT_AVAILABLE _("Auto-correction doesn't work here, yet")
+
 int
 main (int   argc,
       char**argv)
@@ -46,6 +48,7 @@ main (int   argc,
         box = gtk_vbox_new (FALSE, 0);
 
         entry = gtk_entry_new ();
+        gtk_entry_set_text (GTK_ENTRY (entry), AUTO_CORRECT_NOT_AVAILABLE);
         gtk_widget_show (entry);
 
         gtk_box_pack_start (GTK_BOX (box), entry,
@@ -54,6 +57,9 @@ main (int   argc,
         scrolled = gtk_scrolled_window_new (NULL, NULL);
 
         view = gtk_text_view_new ();
+        gtk_text_buffer_set_text (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
+                                  AUTO_CORRECT_NOT_AVAILABLE,
+                                  -1);
 
         gtk_widget_show (view);
         gtk_container_add (GTK_CONTAINER (scrolled), view);
