@@ -26,6 +26,7 @@
 #include <glib/gi18n.h>
 
 #define AUTO_CORRECT_NOT_AVAILABLE _("Auto-correction doesn't work here, yet")
+#define AUTO_CORRECT_AVAILABLE _("Auto-correction works here")
 
 static gboolean text_inserted = FALSE;
 static gboolean auto_complete = FALSE;
@@ -125,7 +126,7 @@ main (int   argc,
                                 G_CALLBACK (entry_text_inserted), NULL);
         g_signal_connect_after (entry, "delete-text",
                                 G_CALLBACK (entry_text_deleted), NULL);
-        gtk_entry_set_text (GTK_ENTRY (entry), AUTO_CORRECT_NOT_AVAILABLE);
+        gtk_entry_set_text (GTK_ENTRY (entry), AUTO_CORRECT_AVAILABLE);
         gtk_widget_show (entry);
 
         gtk_box_pack_start (GTK_BOX (box), entry,
