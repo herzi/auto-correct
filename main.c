@@ -109,26 +109,10 @@ entry_cursor_position_changed (GtkEntry  * entry,
 
                                         g_string_free (string, TRUE);
 
-                                        /* START: implement g_utf8_n_chars(before) - g_utf8_n_chars(after) */
-                                        gchar const* iter;
-                                        gint cursor_old = cursor;
-                                        for (j = 0, iter = auto_completion[i].before;
-                                             *iter != '\0';
-                                             iter = g_utf8_next_char (iter), j++)
-                                        {
-                                                /* increase char count */
-                                                cursor--;
-                                        }
-                                        for (j = 0, iter = auto_completion[i].after;
-                                             *iter != '\0';
-                                             iter = g_utf8_next_char (iter), j++)
-                                        {
-                                                /* decrease char count */
-                                                cursor++;
-                                        }
-                                        /* END */
-
-                                        gtk_editable_set_position (GTK_EDITABLE (entry), cursor);
+                                        gtk_editable_set_position (GTK_EDITABLE (entry),
+                                                                   cursor -
+                                                                   g_utf8_strlen (auto_completion[i].before, -1) +
+                                                                   g_utf8_strlen (auto_completion[i].after, -1));
                                 }
                         }
                 }
