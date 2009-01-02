@@ -47,7 +47,8 @@ struct _AutoCompletion {
 static AutoCompletion auto_completion[] = {
         {"...", "…"},
         {"\"",  "»", AUTO_COMPLETION_AFTER_WHITESPACE},
-        {"\"",  "«"}
+        {"\"",  "«"},
+        {"-- ",  "— ", AUTO_COMPLETION_AFTER_WHITESPACE}
 };
 
 static void
