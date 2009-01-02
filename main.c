@@ -41,6 +41,22 @@ entry_cursor_position_changed (GtkEntry  * entry,
         g_debug ("entry's cursor position is: %d", cursor);
 }
 
+static void
+entry_text_inserted (GtkEntry  * entry,
+                     GParamSpec* pspec     G_GNUC_UNUSED,
+                     gpointer    user_data G_GNUC_UNUSED)
+{
+        g_debug ("entry's text is (inserted): \"%s\"", gtk_entry_get_text (entry));
+}
+
+static void
+entry_text_deleted (GtkEntry  * entry,
+                    GParamSpec* pspec     G_GNUC_UNUSED,
+                    gpointer    user_data G_GNUC_UNUSED)
+{
+        g_debug ("entry's text is (deleted):  \"%s\"", gtk_entry_get_text (entry));
+}
+
 int
 main (int   argc,
       char**argv)
@@ -64,6 +80,10 @@ main (int   argc,
         entry = gtk_entry_new ();
         g_signal_connect (entry, "notify::cursor-position",
                           G_CALLBACK (entry_cursor_position_changed), NULL);
+        g_signal_connect_after (entry, "insert-text",
+                                G_CALLBACK (entry_text_inserted), NULL);
+        g_signal_connect_after (entry, "delete-text",
+                                G_CALLBACK (entry_text_deleted), NULL);
         gtk_entry_set_text (GTK_ENTRY (entry), AUTO_CORRECT_NOT_AVAILABLE);
         gtk_widget_show (entry);
 
