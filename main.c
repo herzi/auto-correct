@@ -39,7 +39,10 @@ struct _AutoCompletion {
 };
 
 static AutoCompletion auto_completion[] = {
-        {"...", "…"}
+        {"...", "…"},
+        {"\n\"", "\n»"},
+        {" \"", " »"}, /* this doesn't yet work at cursor position 0 */
+        {"\"", "«"}
 };
 
 static void
@@ -84,18 +87,48 @@ entry_cursor_position_changed (GtkEntry  * entry,
                                                 g_string_overwrite (string,
                                                                     text_cursor - strlen (auto_completion[i].before) - text,
                                                                     auto_completion[i].after);
+                                        } else if (strlen (auto_completion[i].before) > strlen (auto_completion[i].after)) {
+                                                g_string_overwrite (string,
+                                                                    text_cursor - strlen (auto_completion[i].before) - text,
+                                                                    auto_completion[i].after);
+                                                g_string_erase (string,
+                                                                text_cursor - strlen (auto_completion[i].before) + strlen (auto_completion[i].after) - text,
+                                                                strlen (auto_completion[i].after) - strlen (auto_completion[i].before));
                                         } else {
-                                                g_warning ("strlen (auto_completion[i].before) != strlen (auto_completion[i].after): %d (%s) != %d (%s)",
-                                                           strlen (auto_completion[i].before),
-                                                           auto_completion[i].before,
-                                                           strlen (auto_completion[i].after),
-                                                           auto_completion[i].after);
+                                                /* strlen (auto_completion[i].before) < strlen (auto_completion[i].after) */
+                                                g_string_overwrite_len (string,
+                                                                        text_cursor - strlen (auto_completion[i].before) - text,
+                                                                        auto_completion[i].after,
+                                                                        strlen (auto_completion[i].before));
+                                                g_string_insert (string,
+                                                                 text_cursor - text,
+                                                                 auto_completion[i].after + strlen (auto_completion[i].before));
                                         }
 
                                         gtk_entry_set_text (entry, string->str);
-                                        gtk_editable_set_position (GTK_EDITABLE (entry), cursor - 2);
 
                                         g_string_free (string, TRUE);
+
+                                        /* START: implement g_utf8_n_chars(before) - g_utf8_n_chars(after) */
+                                        gchar const* iter;
+                                        gint cursor_old = cursor;
+                                        for (j = 0, iter = auto_completion[i].before;
+                                             *iter != '\0';
+                                             iter = g_utf8_next_char (iter), j++)
+                                        {
+                                                /* increase char count */
+                                                cursor--;
+                                        }
+                                        for (j = 0, iter = auto_completion[i].after;
+                                             *iter != '\0';
+                                             iter = g_utf8_next_char (iter), j++)
+                                        {
+                                                /* decrease char count */
+                                                cursor++;
+                                        }
+                                        /* END */
+
+                                        gtk_editable_set_position (GTK_EDITABLE (entry), cursor);
                                 }
                         }
                 }
