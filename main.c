@@ -30,6 +30,7 @@ main (int   argc,
       char**argv)
 {
         GtkWidget* box;
+        GtkWidget* entry;
         GtkWidget* scrolled;
         GtkWidget* view;
         GtkWidget* window;
@@ -43,6 +44,12 @@ main (int   argc,
                           G_CALLBACK (gtk_main_quit), NULL);
 
         box = gtk_vbox_new (FALSE, 0);
+
+        entry = gtk_entry_new ();
+        gtk_widget_show (entry);
+
+        gtk_box_pack_start (GTK_BOX (box), entry,
+                            FALSE, FALSE, 0);
 
         scrolled = gtk_scrolled_window_new (NULL, NULL);
 
