@@ -46,14 +46,14 @@ struct _AutoCompletion {
 
 static AutoCompletion auto_completion[] = {
         {"...", "…"},
-        {"\"",  "»", AUTO_COMPLETION_AFTER_WHITESPACE}, /* or this one: "„" */
-        {"\"",  "«"},                                   /* or this one: "“" */
+        {"\"",  "»",  AUTO_COMPLETION_AFTER_WHITESPACE}, /* or this one: "„" */
+        {"\"",  "«"},                                    /* or this one: "“" */
         {"-- ", "— ", AUTO_COMPLETION_AFTER_WHITESPACE},
         {"?? ", "⁇ "},
         {"?! ", "⁈ "},
         {"!? ", "⁉ "},
         {"!! ", "‼ "},
-        {"'", "‘", AUTO_COMPLETION_AFTER_WHITESPACE},
+        {"'", "‘",    AUTO_COMPLETION_AFTER_WHITESPACE},
         {"'", "’"},
         {"°C", "℃"},
         {"°F", "℉"},
@@ -70,13 +70,7 @@ entry_cursor_position_changed (GtkEntry  * entry,
                                GParamSpec* pspec     G_GNUC_UNUSED,
                                gpointer    user_data G_GNUC_UNUSED)
 {
-        gint cursor = 0;
-
-        g_object_get (entry,
-                      "cursor-position", &cursor,
-                      NULL);
-
-        g_debug ("entry's cursor position is: %d", cursor);
+        gint cursor = gtk_editable_get_position (GTK_EDITABLE (entry));
 
         if (text_inserted) {
                 gchar const* text = gtk_entry_get_text (entry);
@@ -161,8 +155,6 @@ entry_text_inserted (GtkEntry  * entry,
                      GParamSpec* pspec     G_GNUC_UNUSED,
                      gpointer    user_data G_GNUC_UNUSED)
 {
-        g_debug ("entry's text is (inserted): \"%s\"", gtk_entry_get_text (entry));
-
         if (!auto_complete) {
                 /* FIXME: store on the GtkEntry */
                 text_inserted = TRUE;
@@ -175,8 +167,6 @@ entry_text_deleted (GtkEntry  * entry,
                     gpointer    user_data G_GNUC_UNUSED)
 {
         /* FIXME: potentially check for mark and undo completion */
-
-        g_debug ("entry's text is (deleted):  \"%s\"", gtk_entry_get_text (entry));
 }
 
 int
