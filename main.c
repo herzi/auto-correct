@@ -31,6 +31,17 @@
 static gboolean text_inserted = FALSE;
 static gboolean auto_complete = FALSE;
 
+typedef struct _AutoCompletion AutoCompletion;
+
+struct _AutoCompletion {
+        gchar const* before;
+        gchar const* after;
+};
+
+static AutoCompletion auto_completion[] = {
+        {"...", "…"}
+};
+
 static void
 entry_cursor_position_changed (GtkEntry  * entry,
                                GParamSpec* pspec     G_GNUC_UNUSED,
@@ -58,19 +69,21 @@ entry_cursor_position_changed (GtkEntry  * entry,
 
                 auto_complete = TRUE;
 
-                if (text_cursor - text >= 3) {
-                        if (text_cursor[-1] == '.' && text_cursor[-2] == '.' && text_cursor[-3] == '.') {
-                                GString* string = g_string_new (text);
-                                /* strlen('...') == strlen('…') */
+                for (i = 0; i < G_N_ELEMENTS (auto_completion); i++) {
+                        if (text_cursor - text >= 3) {
+                                if (text_cursor[-1] == '.' && text_cursor[-2] == '.' && text_cursor[-3] == '.') {
+                                        GString* string = g_string_new (text);
+                                        /* strlen('...') == strlen('…') */
 
-                                g_string_overwrite (string,
-                                                    text_cursor - 3 - text,
-                                                    "…");
+                                        g_string_overwrite (string,
+                                                            text_cursor - 3 - text,
+                                                            "…");
 
-                                gtk_entry_set_text (entry, string->str);
-                                gtk_editable_set_position (GTK_EDITABLE (entry), cursor - 2);
+                                        gtk_entry_set_text (entry, string->str);
+                                        gtk_editable_set_position (GTK_EDITABLE (entry), cursor - 2);
 
-                                g_string_free (string, TRUE);
+                                        g_string_free (string, TRUE);
+                                }
                         }
                 }
 
