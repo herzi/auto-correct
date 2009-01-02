@@ -31,11 +31,17 @@
 static gboolean text_inserted = FALSE;
 static gboolean auto_complete = FALSE;
 
+typedef enum {
+        AUTO_COMPLETION_NONE = 0,
+        AUTO_COMPLETION_AFTER_WHITESPACE = 1
+} AutoCompletionFlags;
+
 typedef struct _AutoCompletion AutoCompletion;
 
 struct _AutoCompletion {
-        gchar const* before;
-        gchar const* after;
+        gchar const        * before;
+        gchar const        * after;
+        AutoCompletionFlags  flags;
 };
 
 static AutoCompletion auto_completion[] = {
