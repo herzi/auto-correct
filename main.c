@@ -46,9 +46,23 @@ struct _AutoCompletion {
 
 static AutoCompletion auto_completion[] = {
         {"...", "…"},
-        {"\"",  "»", AUTO_COMPLETION_AFTER_WHITESPACE},
-        {"\"",  "«"},
-        {"-- ",  "— ", AUTO_COMPLETION_AFTER_WHITESPACE}
+        {"\"",  "»", AUTO_COMPLETION_AFTER_WHITESPACE}, /* or this one: "„" */
+        {"\"",  "«"},                                   /* or this one: "“" */
+        {"-- ", "— ", AUTO_COMPLETION_AFTER_WHITESPACE},
+        {"?? ", "⁇ "},
+        {"?! ", "⁈ "},
+        {"!? ", "⁉ "},
+        {"!! ", "‼ "},
+        {"'", "‘", AUTO_COMPLETION_AFTER_WHITESPACE},
+        {"'", "’"},
+        {"°C", "℃"},
+        {"°F", "℉"},
+        {"c/o", "℅"},
+        {"(c)", "©"},
+        {"(R)", "®"},
+        // after newline: •
+        {"->",  "→"},
+        {":-)", "☺"}
 };
 
 static void
@@ -169,11 +183,14 @@ int
 main (int   argc,
       char**argv)
 {
+        GtkTextIter  iter;
         GtkWidget* box;
         GtkWidget* entry;
         GtkWidget* scrolled;
         GtkWidget* view;
         GtkWidget* window;
+        GString    * string;
+        gsize        i;
 
         gtk_init (&argc, &argv);
 
@@ -204,6 +221,29 @@ main (int   argc,
         gtk_text_buffer_set_text (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
                                   AUTO_CORRECT_NOT_AVAILABLE,
                                   -1);
+        gtk_text_buffer_get_end_iter (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
+                                      &iter);
+        gtk_text_buffer_insert (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
+                                &iter,
+                                _("\nPotential replacements:\n"),
+                                -1);
+
+        string = g_string_new ("");
+        for (i = 0; i < G_N_ELEMENTS (auto_completion); i++) {
+                g_string_set_size (string, 0);
+
+                g_string_append_printf (string,
+                                        _("\n\"%s\" => \"%s\"%s"),
+                                        auto_completion[i].before,
+                                        auto_completion[i].after,
+                                        auto_completion[i].flags == AUTO_COMPLETION_AFTER_WHITESPACE ? _("(after whitespace)") : "");
+
+                gtk_text_buffer_insert (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
+                                        &iter,
+                                        string->str,
+                                        -1);
+        }
+        g_string_free (string, TRUE);
 
         gtk_widget_show (view);
         gtk_container_add (GTK_CONTAINER (scrolled), view);
