@@ -70,14 +70,27 @@ entry_cursor_position_changed (GtkEntry  * entry,
                 auto_complete = TRUE;
 
                 for (i = 0; i < G_N_ELEMENTS (auto_completion); i++) {
-                        if (text_cursor - text >= 3) {
-                                if (text_cursor[-1] == '.' && text_cursor[-2] == '.' && text_cursor[-3] == '.') {
+                        if (text_cursor - text >= strlen (auto_completion[i].before)) {
+                                gsize j;
+                                for (j = 0; j < strlen (auto_completion[i].before); j++) {
+                                        if (text_cursor[j-strlen (auto_completion[i].before)] != auto_completion[i].before[j]) {
+                                                break;
+                                        }
+                                }
+                                if (j >= strlen (auto_completion[i].before)) {
                                         GString* string = g_string_new (text);
-                                        /* strlen('...') == strlen('…') */
 
-                                        g_string_overwrite (string,
-                                                            text_cursor - 3 - text,
-                                                            "…");
+                                        if (strlen (auto_completion[i].before) == strlen (auto_completion[i].after)) {
+                                                g_string_overwrite (string,
+                                                                    text_cursor - strlen (auto_completion[i].before) - text,
+                                                                    auto_completion[i].after);
+                                        } else {
+                                                g_warning ("strlen (auto_completion[i].before) != strlen (auto_completion[i].after): %d (%s) != %d (%s)",
+                                                           strlen (auto_completion[i].before),
+                                                           auto_completion[i].before,
+                                                           strlen (auto_completion[i].after),
+                                                           auto_completion[i].after);
+                                        }
 
                                         gtk_entry_set_text (entry, string->str);
                                         gtk_editable_set_position (GTK_EDITABLE (entry), cursor - 2);
