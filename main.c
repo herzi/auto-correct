@@ -113,12 +113,16 @@ entry_cursor_position_changed (GtkEntry  * entry,
                                                                    cursor -
                                                                    g_utf8_strlen (auto_completion[i].before, -1) +
                                                                    g_utf8_strlen (auto_completion[i].after, -1));
+
+                                        /* FIXME: add a mark to display some stuff later */
                                 }
                         }
                 }
 
                 auto_complete = FALSE;
         }
+
+        /* FIXME: check for mark and display/hide it */
 }
 
 static void
@@ -139,6 +143,8 @@ entry_text_deleted (GtkEntry  * entry,
                     GParamSpec* pspec     G_GNUC_UNUSED,
                     gpointer    user_data G_GNUC_UNUSED)
 {
+        /* FIXME: potentially check for mark and undo completion */
+
         g_debug ("entry's text is (deleted):  \"%s\"", gtk_entry_get_text (entry));
 }
 
