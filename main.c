@@ -46,9 +46,8 @@ struct _AutoCompletion {
 
 static AutoCompletion auto_completion[] = {
         {"...", "…"},
-        {"\n\"", "\n»"},
-        {" \"", " »"}, /* this doesn't yet work at cursor position 0 */
-        {"\"", "«"}
+        {"\"",  "»", AUTO_COMPLETION_AFTER_WHITESPACE},
+        {"\"",  "«"}
 };
 
 static void
@@ -84,6 +83,17 @@ entry_cursor_position_changed (GtkEntry  * entry,
                                 for (j = 0; j < strlen (auto_completion[i].before); j++) {
                                         if (text_cursor[j-strlen (auto_completion[i].before)] != auto_completion[i].before[j]) {
                                                 break;
+                                        }
+                                }
+                                if ((auto_completion[i].flags & AUTO_COMPLETION_AFTER_WHITESPACE) != 0) {
+                                        if (text_cursor - strlen (auto_completion[i].before) - text <= 0) {
+                                        } else {
+                                                gchar* maybe_whitespace = g_utf8_prev_char (&text_cursor[-strlen (auto_completion[i].before)]);
+                                                gunichar maybe_whitespace_c = g_utf8_get_char (maybe_whitespace);
+
+                                                if (!g_unichar_isspace (maybe_whitespace_c)) {
+                                                        j = 0;
+                                                }
                                         }
                                 }
                                 if (j >= strlen (auto_completion[i].before)) {
