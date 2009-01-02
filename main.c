@@ -27,6 +27,20 @@
 
 #define AUTO_CORRECT_NOT_AVAILABLE _("Auto-correction doesn't work here, yet")
 
+static void
+entry_cursor_position_changed (GtkEntry  * entry,
+                               GParamSpec* pspec     G_GNUC_UNUSED,
+                               gpointer    user_data G_GNUC_UNUSED)
+{
+        gint cursor = 0;
+
+        g_object_get (entry,
+                      "cursor-position", &cursor,
+                      NULL);
+
+        g_debug ("entry's cursor position is: %d", cursor);
+}
+
 int
 main (int   argc,
       char**argv)
@@ -48,6 +62,8 @@ main (int   argc,
         box = gtk_vbox_new (FALSE, 0);
 
         entry = gtk_entry_new ();
+        g_signal_connect (entry, "notify::cursor-position",
+                          G_CALLBACK (entry_cursor_position_changed), NULL);
         gtk_entry_set_text (GTK_ENTRY (entry), AUTO_CORRECT_NOT_AVAILABLE);
         gtk_widget_show (entry);
 
