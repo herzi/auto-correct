@@ -27,6 +27,8 @@
 
 #define AUTO_CORRECT_NOT_AVAILABLE _("Auto-correction doesn't work here, yet")
 
+static gboolean text_inserted = FALSE;
+
 static void
 entry_cursor_position_changed (GtkEntry  * entry,
                                GParamSpec* pspec     G_GNUC_UNUSED,
@@ -39,6 +41,35 @@ entry_cursor_position_changed (GtkEntry  * entry,
                       NULL);
 
         g_debug ("entry's cursor position is: %d", cursor);
+
+        if (text_inserted) {
+                gchar const* text = gtk_entry_get_text (entry);
+                gchar const* text_cursor = text;
+                gsize i;
+
+                /* avoid recursion */
+                text_inserted = FALSE;
+
+                for (i = 0; i < cursor; i++) {
+                        text_cursor = g_utf8_next_char (text_cursor);
+                }
+
+                if (text_cursor - text >= 3) {
+                        if (text_cursor[-1] == '.' && text_cursor[-2] == '.' && text_cursor[-3] == '.') {
+                                GString* string = g_string_new (text);
+                                /* strlen('...') == strlen('…') */
+
+                                g_string_overwrite (string,
+                                                    text_cursor - 3 - text,
+                                                    "…");
+
+                                gtk_entry_set_text (entry, string->str);
+                                gtk_editable_set_position (GTK_EDITABLE (entry), cursor - 2);
+
+                                g_string_free (string, TRUE);
+                        }
+                }
+        }
 }
 
 static void
@@ -47,6 +78,9 @@ entry_text_inserted (GtkEntry  * entry,
                      gpointer    user_data G_GNUC_UNUSED)
 {
         g_debug ("entry's text is (inserted): \"%s\"", gtk_entry_get_text (entry));
+
+        /* FIXME: store on the GtkEntry */
+        text_inserted = TRUE;
 }
 
 static void
