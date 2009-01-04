@@ -232,6 +232,7 @@ static void
 display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
+        GtkWidget* tree;
         GtkWidget* dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
                                                          GTK_WINDOW (window),
                                                          GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
@@ -240,6 +241,13 @@ display_dialog (GtkAction* action,
 
         gtk_dialog_set_default_response (GTK_DIALOG (dialog),
                                          GTK_RESPONSE_ACCEPT);
+        gtk_window_set_default_size (GTK_WINDOW (dialog), 400, 300);
+
+        tree = gtk_tree_view_new ();
+        gtk_widget_show (tree);
+
+        gtk_box_pack_start_defaults (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+                                     tree);
 
         gtk_dialog_run (GTK_DIALOG (dialog));
 
