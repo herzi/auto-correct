@@ -60,7 +60,7 @@ static AutoCompletion auto_completion[] = {
         {"c/o", "℅"},
         {"(c)", "©"},
         {"(R)", "®"},
-        // after newline: •
+        {"\n- ", "\n• "},
         {"->",  "→"},
         {":-)", "☺"}
 };
