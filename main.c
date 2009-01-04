@@ -352,6 +352,7 @@ display_dialog (GtkAction* action,
         GtkWidget        * box;
         GtkWidget        * frame;
         GtkWidget        * scrolled;
+        GtkWidget        * table;
         GtkWidget        * tree;
         GtkWidget        * dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
                                                                  GTK_WINDOW (window),
@@ -369,6 +370,12 @@ display_dialog (GtkAction* action,
         /* FIXME: add insert and remove stuff */
 
         box = gtk_vbox_new (FALSE, 0);
+
+        table = gtk_table_new (1, 2, FALSE);
+        gtk_widget_show (table);
+
+        gtk_box_pack_start (GTK_BOX (box), table,
+                            FALSE, FALSE, 0);
 
         tree = gtk_tree_view_new ();
         /* FIXME: make editable */
