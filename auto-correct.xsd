@@ -11,6 +11,13 @@
           <xsd:complexType>
             <xsd:attribute name="before" type="xsd:string" use="required" />
             <xsd:attribute name="after"  type="xsd:string" use="required" />
+            <xsd:attribute name="flags">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="after-whitespace" />
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:attribute>
           </xsd:complexType>
         </xsd:element>
       </xsd:sequence>

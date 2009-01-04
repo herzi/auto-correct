@@ -2,7 +2,7 @@
 <!-- vim:set sw=2: -->
 <auto-correction xmlns='http://www.adeal.eu/auto-correct/0.0.1'>
   <entry before="..." after="&#x2026;" />
-  <!--<entry before="&quot;" after="»" flags="after-whitespace" />-->
+  <entry before="&quot;" after="»" flags="after-whitespace" />
   <!--
         {"\"",  "«"},                                    /* or this one: "“" */
         {"- - ", "— ", AUTO_COMPLETION_AFTER_WHITESPACE}, // FIXME: remove space in between
