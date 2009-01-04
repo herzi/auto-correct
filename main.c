@@ -445,7 +445,7 @@ display_dialog (GtkAction* action,
                         exit (1); /* FIXME: recover nicely */
                 }
 
-                if (fcntl (fd, F_SETLKW, &fl) == -1) {
+                if (fcntl (fd, F_SETLK, &fl) == -1) {
                         perror ("fcntl");
                         exit (1); /* FIXME: recover nicely */
                 }
@@ -513,6 +513,7 @@ main (int   argc,
         sax.endElementNs   = end_element_ns;
 
         xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, NULL);
+        /* watch and reload file */
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
