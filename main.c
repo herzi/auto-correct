@@ -350,6 +350,8 @@ display_dialog (GtkAction* action,
         PangoAttrList    * attributes;
         GtkListStore     * store;
         GtkWidget        * box;
+        GtkWidget        * entry_after;
+        GtkWidget        * entry_before;
         GtkWidget        * frame;
         GtkWidget        * scrolled;
         GtkWidget        * table;
@@ -372,6 +374,15 @@ display_dialog (GtkAction* action,
         box = gtk_vbox_new (FALSE, 0);
 
         table = gtk_table_new (1, 2, FALSE);
+
+        entry_before = gtk_entry_new ();
+        gtk_widget_show (entry_before);
+        gtk_table_attach (GTK_TABLE (table), entry_before,
+                          0, 1, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+        entry_after = gtk_entry_new ();
+        gtk_widget_show (entry_after);
+        gtk_table_attach (GTK_TABLE (table), entry_after,
+                          1, 2, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
         gtk_widget_show (table);
 
         gtk_box_pack_start (GTK_BOX (box), table,
