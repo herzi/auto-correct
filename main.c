@@ -21,6 +21,7 @@
  * USA
  */
 
+#include <libxml/parser.h>
 #include <libxml/xmlversion.h>
 #include <gtk/gtk.h>
 
@@ -153,6 +154,55 @@ entry_text_deleted (GtkEntry  * entry,
         /* FIXME: potentially check for mark and undo completion */
 }
 
+static void
+start_element_ns (gpointer      ctxt,
+                  guchar const* local_name,
+                  guchar const* prefix,
+                  guchar const* uri,
+                  int           n_namespaces,
+                  guchar const**namespaces,
+                  int           n_attributes,
+                  int           n_defaulted,
+                  guchar const**attributes)
+{
+        gint i;
+
+        g_return_if_fail (g_strcmp0 ("http://www.adeal.eu/auto-correct/0.0.1", (gchar const*)uri) == 0);
+
+        if (!strcmp ("entry", (gchar const*)local_name)) {
+                AutoCompletion* cmp = g_slice_new0 (AutoCompletion);
+                for (i = 0; i < n_attributes; i++) {
+                        if (g_strcmp0 ("before", (gchar const*)attributes[5*i]) == 0) {
+                                g_return_if_fail (!cmp->before);
+                                cmp->before = g_strndup ((gchar*)attributes[5*i+3], attributes[5*i+4] - attributes[5*i+3]);
+                        } else if (g_strcmp0 ("after", (gchar const*)attributes[5*i]) == 0) {
+                                g_return_if_fail (!cmp->after);
+                                cmp->after = g_strndup ((gchar*)attributes[5*i+3], attributes[5*i+4] - attributes[5*i+3]);
+                        } else {
+                                gchar* value = g_strndup ((gchar*)attributes[5*i+3], attributes[5*i+4] - attributes[5*i+3]);
+
+                                g_print ("\t(%s)%s:%s=%s\n",
+                                         attributes[5*i+1],
+                                         attributes[5*i+2],
+                                         attributes[5*i],
+                                         value);
+                                g_free (value);
+                        }
+                }
+
+                g_return_if_fail (cmp->before != NULL);
+                g_return_if_fail (cmp->after  != NULL);
+
+                completions = g_list_prepend (completions, cmp);
+        } else if (!strcmp ("auto-correction", (gchar const*)local_name)) {
+                for (i = 0; i < n_namespaces; i++) {
+                        g_print ("\t%s:%s\n", namespaces[2*i], namespaces[2*i+1]);
+                }
+        } else {
+                g_assert_not_reached ();
+        }
+}
+
 int
 main (int   argc,
       char**argv)
@@ -166,7 +216,6 @@ main (int   argc,
         GString    * string;
         gsize        i;
         AutoCompletion auto_completion[] = {
-                {"...", "…"},
                 {"\"",  "»",  AUTO_COMPLETION_AFTER_WHITESPACE}, /* or this one: "„" */
                 {"\"",  "«"},                                    /* or this one: "“" */
                 {"-- ", "— ", AUTO_COMPLETION_AFTER_WHITESPACE},
@@ -185,9 +234,16 @@ main (int   argc,
                 {"->",  "→"},
                 {":-)", "☺"}
         };
+        xmlSAXHandler  sax;
 
         gtk_init (&argc, &argv);
         LIBXML_TEST_VERSION;
+
+        xmlSAXVersion (&sax, 2);
+        sax.startElementNs = start_element_ns;
+        //sax.endElementNs   = end_element_ns;
+
+        xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, NULL);
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
         gtk_window_set_title (GTK_WINDOW (window), _("Auto-correction demo..."));
@@ -223,6 +279,8 @@ main (int   argc,
                                 _("\nPotential replacements:\n"),
                                 -1);
 
+        // list is still reversed
+        //completions = g_list_reverse (completions);
         string = g_string_new ("");
         for (i = 0; i < G_N_ELEMENTS (auto_completion); i++) {
                 completions = g_list_prepend (completions, &auto_completion[i]);
