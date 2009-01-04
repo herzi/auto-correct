@@ -244,7 +244,7 @@ main (int   argc,
                  NULL, NULL,
                  NULL},
                 {"Preferences", GTK_STOCK_PREFERENCES, NULL,
-                 NULL, NULL, // FIXME: add tooltip
+                 "<Ctrl>P", NULL, // FIXME: add tooltip
                  G_CALLBACK (display_dialog)},
                 {"Quit", GTK_STOCK_QUIT, NULL,
                  NULL, NULL, // FIXME: add tooltip
