@@ -228,6 +228,13 @@ end_element_ns (gpointer      ctxt,
         }
 }
 
+static void
+display_dialog (GtkAction* action,
+                GtkWidget* window)
+{
+        ;
+}
+
 int
 main (int   argc,
       char**argv)
@@ -236,6 +243,9 @@ main (int   argc,
                 {"File", NULL, N_("_Auto Correction"),
                  NULL, NULL,
                  NULL},
+                {"Preferences", GTK_STOCK_PREFERENCES, NULL,
+                 NULL, NULL, // FIXME: add tooltip
+                 G_CALLBACK (display_dialog)},
                 {"Quit", GTK_STOCK_QUIT, NULL,
                  NULL, NULL, // FIXME: add tooltip
                  G_CALLBACK (gtk_main_quit)}
@@ -262,11 +272,13 @@ main (int   argc,
 
         xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, NULL);
 
+        window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+
         actions = gtk_action_group_new ("main-window");
         gtk_action_group_add_actions (actions,
                                       entries,
                                       G_N_ELEMENTS (entries),
-                                      NULL);
+                                      window);
 
         manager = gtk_ui_manager_new ();
         gtk_ui_manager_insert_action_group (manager,
@@ -274,8 +286,8 @@ main (int   argc,
                                             0);
         if (!gtk_ui_manager_add_ui_from_string (manager,
                                                 "<menubar name='menus'><menu action='File'>"
-                                                //  "<menuitem action='Preferences' />"
-                                                //  "<separator />"
+                                                  "<menuitem action='Preferences' />"
+                                                  "<separator />"
                                                   "<menuitem action='Quit' />"
                                                 "</menu></menubar>",
                                                 -1,
@@ -288,7 +300,6 @@ main (int   argc,
                 return 1;
         }
 
-        window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
         gtk_window_set_title (GTK_WINDOW (window), _("Auto-correction demo..."));
         gtk_window_set_default_size (GTK_WINDOW (window), 400, 300);
         gtk_window_add_accel_group  (GTK_WINDOW (window),
