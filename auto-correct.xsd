@@ -7,7 +7,7 @@
   <xsd:element name="auto-correction">
     <xsd:complexType>
       <xsd:sequence>
-        <xsd:element name="entry">
+        <xsd:element name="entry" maxOccurs="unbounded">
           <xsd:complexType>
             <xsd:attribute name="before" type="xsd:string" use="required" />
             <xsd:attribute name="after"  type="xsd:string" use="required" />
