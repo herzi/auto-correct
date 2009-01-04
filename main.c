@@ -21,6 +21,9 @@
  * USA
  */
 
+#include <fcntl.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <libxml/parser.h>
 #include <libxml/xmlversion.h>
 #include <gtk/gtk.h>
@@ -282,6 +285,58 @@ render_after_whitespace_column (GtkTreeViewColumn* column,
                       NULL);
 }
 
+static gchar*
+ac_xml_escape (gchar const* string)
+{
+        GString* gstring;
+        gchar const* end = NULL;
+        gchar* result;
+
+        if (!g_utf8_validate (string, -1, &end)) {
+                result = g_strdup_printf ("invalid utf-8 byte at offset %d: 0x%x",
+                                          end - string,
+                                          *end);
+                g_warning ("%s", result);
+                return result;
+        }
+
+        gstring = g_string_new ("");
+        for (; *string; string = g_utf8_next_char (string)) {
+                gunichar c = g_utf8_get_char (string);
+
+                if (c > 127) {
+                        g_string_append_printf (gstring, "&#x%x;", c);
+                        continue;
+                }
+
+                switch (c) {
+                case '"':
+                        g_string_append_printf (gstring, "&quot;");
+                        break;
+                case '\'':
+                        g_string_append_printf (gstring, "&apos;");
+                        break;
+                case '<':
+                        g_string_append_printf (gstring, "&lt;");
+                        break;
+                case '>':
+                        g_string_append_printf (gstring, "&gt;");
+                        break;
+                case '&':
+                        g_string_append_printf (gstring, "&amp;");
+                        break;
+                default:
+                        g_string_append_unichar (gstring, c);
+                        break;
+                }
+        }
+
+        result = gstring->str;
+        g_string_free (gstring, FALSE);
+        return result;
+}
+
+
 static void
 display_dialog (GtkAction* action,
                 GtkWidget* window)
@@ -366,6 +421,60 @@ display_dialog (GtkAction* action,
         gtk_dialog_run (GTK_DIALOG (dialog));
 
         gtk_widget_destroy (dialog);
+
+        /* now save the stuff */
+        {
+                struct flock fl = {F_WRLCK, SEEK_SET, 0, 0, 0};
+                int fd = -1;
+                FILE* f;
+                GList* iter;
+                gchar* path;
+
+                fl.l_pid = getpid ();
+
+                path = g_build_filename (g_get_home_dir(),
+                                         ".local",
+                                         "share",
+                                         "auto-correct.xml",
+                                         NULL);
+                fd = open (path, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+                g_free (path);
+
+                if (fd == -1) {
+                        perror ("open");
+                        exit (1); /* FIXME: recover nicely */
+                }
+
+                if (fcntl (fd, F_SETLKW, &fl) == -1) {
+                        perror ("fcntl");
+                        exit (1); /* FIXME: recover nicely */
+                }
+
+                f = fdopen (fd, "w");
+
+                fprintf (f, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+                fprintf (f, "<!-- vim:set sw=2: -->\n");
+                fprintf (f, "<auto-correction xmlns=\"http://www.adeal.eu/auto-correct/0.0.1\">\n");
+                for (iter = completions; iter; iter = g_list_next (iter)) {
+                        AutoCompletion* cmp = iter->data;
+                        gchar* before = ac_xml_escape (cmp->before);
+                        gchar* after  = ac_xml_escape (cmp->after);
+                        gchar const* flags = (cmp->flags & AUTO_COMPLETION_AFTER_WHITESPACE) != 0 ?
+                                             " flags=\"after-whitespace\"" : "";
+
+                        fprintf (f, "  <entry before=\"%s\" after=\"%s\"%s />\n",
+                                 before,
+                                 after,
+                                 flags);
+
+                        g_free (before);
+                        g_free (after);
+                }
+                fprintf (f, "</auto-correction>\n");
+
+                fclose (f);
+                close (fd);
+        }
 }
 
 int
