@@ -235,7 +235,10 @@ main (int   argc,
         GtkActionEntry  entries[] = {
                 {"File", NULL, N_("_Auto Correction"),
                  NULL, NULL,
-                 NULL}
+                 NULL},
+                {"Quit", GTK_STOCK_QUIT, NULL,
+                 NULL, NULL, // FIXME: add tooltip
+                 G_CALLBACK (gtk_main_quit)}
         };
         GtkActionGroup* actions;
         GtkUIManager  * manager;
@@ -273,7 +276,7 @@ main (int   argc,
                                                 "<menubar name='menus'><menu action='File'>"
                                                 //  "<menuitem action='Preferences' />"
                                                 //  "<separator />"
-                                                  "<menuitem action='Preferences' />"
+                                                  "<menuitem action='Quit' />"
                                                 "</menu></menubar>",
                                                 -1,
                                                 &error))
@@ -288,6 +291,8 @@ main (int   argc,
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
         gtk_window_set_title (GTK_WINDOW (window), _("Auto-correction demo..."));
         gtk_window_set_default_size (GTK_WINDOW (window), 400, 300);
+        gtk_window_add_accel_group  (GTK_WINDOW (window),
+                                     gtk_ui_manager_get_accel_group (manager));
         g_signal_connect (window, "destroy",
                           G_CALLBACK (gtk_main_quit), NULL);
 
