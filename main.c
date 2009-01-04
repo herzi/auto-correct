@@ -287,7 +287,10 @@ display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
         GtkTreeViewColumn* column;
+        PangoAttribute   * attribute;
+        PangoAttrList    * attributes;
         GtkListStore     * store;
+        GtkWidget        * frame;
         GtkWidget        * scrolled;
         GtkWidget        * tree;
         GtkWidget        * dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
@@ -302,15 +305,18 @@ display_dialog (GtkAction* action,
                                          GTK_RESPONSE_ACCEPT);
         gtk_window_set_default_size (GTK_WINDOW (dialog), 400, 300);
 
+        /* FIXME: add insert and remove stuff */
+
         tree = gtk_tree_view_new ();
+        /* FIXME: make editable */
         columns = gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
-                                                              _("Before"), gtk_cell_renderer_text_new (),
+                                                              _("Replace"), gtk_cell_renderer_text_new (),
                                                               render_before_column, NULL,
                                                               NULL);
         column = gtk_tree_view_get_column (GTK_TREE_VIEW (tree), columns - 1);
         gtk_tree_view_column_set_expand (column, TRUE);
         columns = gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
-                                                              _("After"), gtk_cell_renderer_text_new (),
+                                                              _("With"), gtk_cell_renderer_text_new (),
                                                               render_after_column, NULL,
                                                               NULL);
         column = gtk_tree_view_get_column (GTK_TREE_VIEW (tree), columns - 1);
@@ -328,8 +334,22 @@ display_dialog (GtkAction* action,
                            tree);
         gtk_widget_show (scrolled);
 
-        gtk_box_pack_start_defaults (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
-                                     scrolled);
+        frame = gtk_frame_new (_("Current Replacement List"));
+        attributes = pango_attr_list_new ();
+        attribute = pango_attr_weight_new (PANGO_WEIGHT_BOLD);
+        pango_attr_list_change (attributes,
+                                attribute);
+        gtk_label_set_attributes (GTK_LABEL (gtk_frame_get_label_widget (GTK_FRAME (frame))),
+                                  attributes);
+        gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_NONE);
+        gtk_container_add (GTK_CONTAINER (frame),
+                           scrolled);
+        gtk_widget_show (frame);
+
+        gtk_container_add (GTK_CONTAINER (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+                           frame);
+
+        /* FIXME: add a label "To change the values, just double-click into a field" */
 
         store = gtk_list_store_new (1, G_TYPE_POINTER); /* FIXME: symbolic names */
         for (iter = completions; iter; iter = g_list_next (iter)) {
