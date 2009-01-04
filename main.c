@@ -21,6 +21,7 @@
  * USA
  */
 
+#include <libxml/xmlversion.h>
 #include <gtk/gtk.h>
 
 #include <glib/gi18n.h>
@@ -186,6 +187,7 @@ main (int   argc,
         };
 
         gtk_init (&argc, &argv);
+        LIBXML_TEST_VERSION;
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
         gtk_window_set_title (GTK_WINDOW (window), _("Auto-correction demo..."));
