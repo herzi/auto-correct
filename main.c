@@ -214,6 +214,20 @@ start_element_ns (gpointer      ctxt,
         }
 }
 
+static void
+end_element_ns (gpointer      ctxt,
+                  guchar const* local_name,
+                  guchar const* prefix,
+                  guchar const* uri)
+{
+        g_return_if_fail (g_strcmp0 ("http://www.adeal.eu/auto-correct/0.0.1", (gchar const*)uri) == 0);
+
+        if (!g_strcmp0 ("entry", (gchar const*)local_name)) {
+        } else if (!g_strcmp0 ("auto-correction", (gchar const*)local_name)) {
+                completions = g_list_reverse (completions);
+        }
+}
+
 int
 main (int   argc,
       char**argv)
@@ -233,10 +247,9 @@ main (int   argc,
 
         xmlSAXVersion (&sax, 2);
         sax.startElementNs = start_element_ns;
-        //sax.endElementNs   = end_element_ns;
+        sax.endElementNs   = end_element_ns;
 
         xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, NULL);
-        completions = g_list_reverse (completions);
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
         gtk_window_set_title (GTK_WINDOW (window), _("Auto-correction demo..."));
