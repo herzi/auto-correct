@@ -431,12 +431,49 @@ display_dialog (GtkAction* action,
         save_to_file (&error);
 }
 
+static void
+fd_printf (int          fd,
+           GError     **error,
+           gchar const* format,
+           ...)
+{
+        va_list  argv;
+        ssize_t  written = 0;
+        size_t   length;
+        char     stack_buffer[512];
+        char   * heap_buffer = NULL;
+
+        g_return_if_fail (!error || !*error);
+        g_return_if_fail (format);
+
+        /* try a small buffer from the stack to not fragment the heap too much */
+        va_start (argv, format);
+        length = vsnprintf (stack_buffer, sizeof (stack_buffer), format, argv);
+        va_end (argv);
+
+        if (length < sizeof (stack_buffer) - 1) { /* length doesn't include \0, sizeof(buffer) does */
+                va_start (argv, format);
+                heap_buffer = g_strdup_vprintf (format, argv);
+                va_end (argv);
+
+                length = strlen (heap_buffer);
+        }
+
+        written = write (fd, heap_buffer ? heap_buffer : stack_buffer, length);
+
+        if (written == -1 || written != length) {
+                /* FIXME: set error */
+                g_assert_not_reached ();
+        }
+
+        g_free (heap_buffer); /* already includes %NULL check */
+}
+
 static gboolean
 save_to_file (GError**error)
 {
                 struct flock fl = {F_WRLCK, SEEK_SET, 0, 0, 0};
                 int fd = -1;
-                FILE* f;
                 GList* iter;
                 gchar* path;
 
@@ -468,11 +505,9 @@ save_to_file (GError**error)
                         exit (1); /* FIXME: recover nicely */
                 }
 
-                f = fdopen (fd, "w");
-
-                fprintf (f, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-                fprintf (f, "<!-- vim:set sw=2: -->\n");
-                fprintf (f, "<auto-correction xmlns=\"http://www.adeal.eu/auto-correct/0.0.1\">\n");
+                fd_printf (fd, error, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+                fd_printf (fd, error, "<!-- vim:set sw=2: -->\n");
+                fd_printf (fd, error, "<auto-correction xmlns=\"http://www.adeal.eu/auto-correct/0.0.1\">\n");
                 for (iter = completions; iter; iter = g_list_next (iter)) {
                         AutoCompletion* cmp = iter->data;
                         gchar* before = ac_xml_escape (cmp->before);
@@ -480,17 +515,15 @@ save_to_file (GError**error)
                         gchar const* flags = (cmp->flags & AUTO_COMPLETION_AFTER_WHITESPACE) != 0 ?
                                              " flags=\"after-whitespace\"" : "";
 
-                        fprintf (f, "  <entry before=\"%s\" after=\"%s\"%s />\n",
-                                 before,
-                                 after,
-                                 flags);
+                        fd_printf (fd, error,
+                                   "  <entry before=\"%s\" after=\"%s\"%s />\n",
+                                   before, after, flags);
 
                         g_free (before);
                         g_free (after);
                 }
-                fprintf (f, "</auto-correction>\n");
+                fd_printf (fd, error, "</auto-correction>\n");
 
-                fclose (f);
                 close (fd);
 
         return TRUE;
