@@ -174,19 +174,28 @@ start_element_ns (gpointer      ctxt,
                 for (i = 0; i < n_attributes; i++) {
                         if (g_strcmp0 ("before", (gchar const*)attributes[5*i]) == 0) {
                                 g_return_if_fail (!cmp->before);
-                                cmp->before = g_strndup ((gchar*)attributes[5*i+3], attributes[5*i+4] - attributes[5*i+3]);
+                                cmp->before = g_strndup ((gchar*)attributes[5*i+3],
+                                                         attributes[5*i+4] - attributes[5*i+3]);
                         } else if (g_strcmp0 ("after", (gchar const*)attributes[5*i]) == 0) {
                                 g_return_if_fail (!cmp->after);
-                                cmp->after = g_strndup ((gchar*)attributes[5*i+3], attributes[5*i+4] - attributes[5*i+3]);
-                        } else {
-                                gchar* value = g_strndup ((gchar*)attributes[5*i+3], attributes[5*i+4] - attributes[5*i+3]);
-
-                                g_print ("\t(%s)%s:%s=%s\n",
-                                         attributes[5*i+1],
-                                         attributes[5*i+2],
-                                         attributes[5*i],
-                                         value);
+                                cmp->after = g_strndup ((gchar*)attributes[5*i+3],
+                                                        attributes[5*i+4] - attributes[5*i+3]);
+                        } else if (g_strcmp0 ("flags", (gchar const*)attributes[5*i]) == 0) {
+                                gchar* value = g_strndup ((gchar*)attributes[5*i+3],
+                                                          attributes[5*i+4] - attributes[5*i+3]);
+                                gchar**values = g_strsplit (value, " ", 0);
+                                gchar**iter;
+                                for (iter = values; *iter; iter++) {
+                                        if (g_strcmp0 ("after-whitespace", *iter) == 0) {
+                                                cmp->flags |= AUTO_COMPLETION_AFTER_WHITESPACE;
+                                        } else {
+                                                g_assert_not_reached ();
+                                        }
+                                }
+                                g_strfreev (values);
                                 g_free (value);
+                        } else {
+                                g_assert_not_reached ();
                         }
                 }
 
@@ -195,9 +204,11 @@ start_element_ns (gpointer      ctxt,
 
                 completions = g_list_prepend (completions, cmp);
         } else if (!strcmp ("auto-correction", (gchar const*)local_name)) {
+#if 0
                 for (i = 0; i < n_namespaces; i++) {
                         g_print ("\t%s:%s\n", namespaces[2*i], namespaces[2*i+1]);
                 }
+#endif
         } else {
                 g_assert_not_reached ();
         }
@@ -214,26 +225,7 @@ main (int   argc,
         GtkWidget* view;
         GtkWidget* window;
         GString    * string;
-        gsize        i;
-        AutoCompletion auto_completion[] = {
-                {"\"",  "»",  AUTO_COMPLETION_AFTER_WHITESPACE}, /* or this one: "„" */
-                {"\"",  "«"},                                    /* or this one: "“" */
-                {"-- ", "— ", AUTO_COMPLETION_AFTER_WHITESPACE},
-                {"?? ", "⁇ "},
-                {"?! ", "⁈ "},
-                {"!? ", "⁉ "},
-                {"!! ", "‼ "},
-                {"'", "‘",    AUTO_COMPLETION_AFTER_WHITESPACE},
-                {"'", "’"},
-                {"°C", "℃"},
-                {"°F", "℉"},
-                {"c/o", "℅"},
-                {"(c)", "©"},
-                {"(R)", "®"},
-                {"\n- ", "\n• "},
-                {"->",  "→"},
-                {":-)", "☺"}
-        };
+        GList        * completion;
         xmlSAXHandler  sax;
 
         gtk_init (&argc, &argv);
@@ -244,6 +236,7 @@ main (int   argc,
         //sax.endElementNs   = end_element_ns;
 
         xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, NULL);
+        completions = g_list_reverse (completions);
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
         gtk_window_set_title (GTK_WINDOW (window), _("Auto-correction demo..."));
@@ -279,25 +272,22 @@ main (int   argc,
                                 _("\nPotential replacements:\n"),
                                 -1);
 
-        // list is still reversed
-        //completions = g_list_reverse (completions);
         string = g_string_new ("");
-        for (i = 0; i < G_N_ELEMENTS (auto_completion); i++) {
-                completions = g_list_prepend (completions, &auto_completion[i]);
+        for (completion = completions; completion; completion = g_list_next (completion)) {
+                AutoCompletion* auto_completion = completion->data;
                 g_string_set_size (string, 0);
 
                 g_string_append_printf (string,
                                         _("\n\"%s\" => \"%s\"%s"),
-                                        auto_completion[i].before,
-                                        auto_completion[i].after,
-                                        auto_completion[i].flags == AUTO_COMPLETION_AFTER_WHITESPACE ? _("(after whitespace)") : "");
+                                        auto_completion->before,
+                                        auto_completion->after,
+                                        auto_completion->flags == AUTO_COMPLETION_AFTER_WHITESPACE ? _("(after whitespace)") : "");
 
                 gtk_text_buffer_insert (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
                                         &iter,
                                         string->str,
                                         -1);
         }
-        completions = g_list_reverse (completions);
         g_string_free (string, TRUE);
 
         gtk_widget_show (view);

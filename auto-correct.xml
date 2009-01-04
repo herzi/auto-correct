@@ -1,24 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- vim:set sw=2: -->
 <auto-correction xmlns='http://www.adeal.eu/auto-correct/0.0.1'>
-  <entry before="..." after="&#x2026;" />
-  <entry before="&quot;" after="»" flags="after-whitespace" />
-  <!--
-        {"\"",  "«"},                                    /* or this one: "“" */
-        {"- - ", "— ", AUTO_COMPLETION_AFTER_WHITESPACE}, // FIXME: remove space in between
-        {"?? ", "⁇ "},
-        {"?! ", "⁈ "},
-        {"!? ", "⁉ "},
-        {"!! ", "‼ "},
-        {"'", "‘",    AUTO_COMPLETION_AFTER_WHITESPACE},
-        {"'", "’"},
-        {"°C", "℃"},
-        {"°F", "℉"},
-        {"c/o", "℅"},
-        {"(c)", "©"},
-        {"(R)", "®"},
-        {"\n- ", "\n• "},
-        {"->",  "→"},
-        {":-)", "☺"}
-        -->
+  <entry before="..."    after="&#x2026;" />
+  <entry before="&quot;" after="»"  flags="after-whitespace" /> <!-- or this one: „ -->
+  <entry before="&quot;" after="«"  />                          <!-- or this one: “ -->
+  <entry before="-- "    after="— " flags="after-whitespace" />
+  <entry before="?? "    after="⁇ " />
+  <entry before="?! "    after="⁈ " />
+  <entry before="!? "    after="⁉ " />
+  <entry before="!! "    after="‼ " />
+  <entry before="'"      after="‘"  flags="after-whitespace" />
+  <entry before="'"      after="’"  />
+  <entry before="°C"     after="℃"  />
+  <entry before="°F"     after="℉"  />
+  <entry before="c/o"    after="℅"  />
+  <entry before="(c)"    after="©"  />
+  <entry before="(R)"    after="®"  />
+  <entry before="\n- "   after="\n• " />
+  <entry before="->"     after="→"  />
+  <entry before=":-)"    after="☺"  />
 </auto-correction>
