@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:ac="http://www.adeal.eu/auto-correct/0.0.1"
+            targetNamespace="http://www.adeal.eu/auto-correct/0.0.1"
+            elementFormDefault="qualified">
+
+  <xsd:element name="auto-correction">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="entry">
+          <xsd:complexType>
+            <xsd:attribute name="before" type="xsd:string" use="required" />
+            <xsd:attribute name="after"  type="xsd:string" use="required" />
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>
