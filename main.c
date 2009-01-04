@@ -232,8 +232,14 @@ int
 main (int   argc,
       char**argv)
 {
-        GtkUIManager * manager;
-        GtkTextIter    iter;
+        GtkActionEntry  entries[] = {
+                {"File", NULL, N_("_Auto Correction"),
+                 NULL, NULL,
+                 NULL}
+        };
+        GtkActionGroup* actions;
+        GtkUIManager  * manager;
+        GtkTextIter     iter;
         GtkWidget    * box;
         GtkWidget* entry;
         GtkWidget* scrolled;
@@ -241,8 +247,8 @@ main (int   argc,
         GtkWidget    * window;
         GString      * string;
         GError       * error = NULL;
-        GList        * completion;
-        xmlSAXHandler  sax;
+        GList         * completion;
+        xmlSAXHandler   sax;
 
         gtk_init (&argc, &argv);
         LIBXML_TEST_VERSION;
@@ -253,7 +259,16 @@ main (int   argc,
 
         xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, NULL);
 
+        actions = gtk_action_group_new ("main-window");
+        gtk_action_group_add_actions (actions,
+                                      entries,
+                                      G_N_ELEMENTS (entries),
+                                      NULL);
+
         manager = gtk_ui_manager_new ();
+        gtk_ui_manager_insert_action_group (manager,
+                                            actions,
+                                            0);
         if (!gtk_ui_manager_add_ui_from_string (manager,
                                                 "<menubar name='menus'><menu action='File'>"
                                                 //  "<menuitem action='Preferences' />"
@@ -277,6 +292,10 @@ main (int   argc,
                           G_CALLBACK (gtk_main_quit), NULL);
 
         box = gtk_vbox_new (FALSE, 0);
+
+        gtk_widget_show (gtk_ui_manager_get_widget (manager, "/ui/menus"));
+        gtk_box_pack_start (GTK_BOX (box), gtk_ui_manager_get_widget (manager, "/ui/menus"),
+                            FALSE, FALSE, 0);
 
         entry = gtk_entry_new ();
         g_signal_connect (entry, "notify::cursor-position",
