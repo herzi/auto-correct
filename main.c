@@ -21,11 +21,13 @@
  * USA
  */
 
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <libxml/parser.h>
 #include <libxml/xmlversion.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 
 #include <glib/gi18n.h>
@@ -50,6 +52,8 @@ struct _AutoCompletion {
 };
 
 static GList* completions = NULL;
+
+static gboolean save_to_file (GError**error);
 
 static void
 entry_cursor_position_changed (GtkEntry  * entry,
@@ -353,6 +357,7 @@ display_dialog (GtkAction* action,
                                                                  GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
                                                                  GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT,
                                                                  NULL);
+        GError           * error = NULL;
         GList            * iter;
         gint               columns;
 
@@ -423,7 +428,12 @@ display_dialog (GtkAction* action,
         gtk_widget_destroy (dialog);
 
         /* now save the stuff */
-        {
+        save_to_file (&error);
+}
+
+static gboolean
+save_to_file (GError**error)
+{
                 struct flock fl = {F_WRLCK, SEEK_SET, 0, 0, 0};
                 int fd = -1;
                 FILE* f;
@@ -437,13 +447,21 @@ display_dialog (GtkAction* action,
                                          "share",
                                          "auto-correct.xml",
                                          NULL);
-                fd = open (path, O_WRONLY | O_TRUNC | O_CREAT, 0644);
-                g_free (path);
+                fd = g_open (path, O_WRONLY | O_TRUNC | O_CREAT, 0644);
 
                 if (fd == -1) {
-                        perror ("open");
-                        exit (1); /* FIXME: recover nicely */
+                        int my_errno = errno;
+                        GError* my_error = g_error_new (G_FILE_ERROR,
+                                                        g_file_error_from_errno (my_errno),
+                                                        _("Couldn't open file \"%s\" for writing"),
+                                                        path);
+
+                        g_free (path);
+
+                        g_propagate_error (error, my_error);
+                        return FALSE;
                 }
+                g_free (path);
 
                 if (fcntl (fd, F_SETLK, &fl) == -1) {
                         perror ("fcntl");
@@ -474,7 +492,8 @@ display_dialog (GtkAction* action,
 
                 fclose (f);
                 close (fd);
-        }
+
+        return TRUE;
 }
 
 int
