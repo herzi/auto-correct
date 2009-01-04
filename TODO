@@ -1,0 +1,9 @@
+TODO list for auto-correct
+==========================
+
+ * save the changes in the prefs dialog as changesets; if we cannot write
+   because of a failing lock, we should re-read the file once we can; then we
+   apply the changeset (after checking that the change hasn't already
+   happened); this way we should be able to keep changes even if two processes
+   change the data at the same time
+
