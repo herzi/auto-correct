@@ -340,6 +340,11 @@ ac_xml_escape (gchar const* string)
         return result;
 }
 
+static void
+click_it (GtkButton* button)
+{
+        g_signal_emit_by_name (button, "activate");
+}
 
 static void
 display_dialog (GtkAction* action,
@@ -380,14 +385,19 @@ display_dialog (GtkAction* action,
 
         /* FIXME: connect entry sizes to the column sizes... */
         entry_before = gtk_entry_new ();
+        entry_after = gtk_entry_new ();
+        g_signal_connect_swapped (entry_before, "activate",
+                                  G_CALLBACK (gtk_widget_grab_focus), entry_after);
         gtk_widget_show (entry_before);
         gtk_table_attach (GTK_TABLE (table), entry_before,
                           0, 1, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
-        entry_after = gtk_entry_new ();
+
+        button_add = gtk_button_new_from_stock (GTK_STOCK_ADD);
+        g_signal_connect_swapped (entry_after, "activate",
+                                  G_CALLBACK (click_it), button_add);
         gtk_widget_show (entry_after);
         gtk_table_attach (GTK_TABLE (table), entry_after,
                           1, 3, 0, 1, GTK_FILL | GTK_EXPAND, GTK_FILL, 0, 0);
-        button_add = gtk_button_new_from_stock (GTK_STOCK_ADD);
         gtk_widget_show (button_add);
 
         alignment = gtk_alignment_new (1.0, 0.5, 0.0, 1.0);
@@ -406,7 +416,7 @@ display_dialog (GtkAction* action,
                             FALSE, FALSE, 0);
 
         tree = gtk_tree_view_new ();
-        /* FIXME: make editable */
+        /* FIXME: make editable; make draggable; ... */
         columns = gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
                                                               _("Replace"), gtk_cell_renderer_text_new (),
                                                               render_before_column, NULL,
