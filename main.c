@@ -349,6 +349,7 @@ display_dialog (GtkAction* action,
         PangoAttribute   * attribute;
         PangoAttrList    * attributes;
         GtkListStore     * store;
+        GtkWidget        * box;
         GtkWidget        * frame;
         GtkWidget        * scrolled;
         GtkWidget        * tree;
@@ -366,6 +367,8 @@ display_dialog (GtkAction* action,
         gtk_window_set_default_size (GTK_WINDOW (dialog), 400, 300);
 
         /* FIXME: add insert and remove stuff */
+
+        box = gtk_vbox_new (FALSE, 0);
 
         tree = gtk_tree_view_new ();
         /* FIXME: make editable */
@@ -394,6 +397,9 @@ display_dialog (GtkAction* action,
                            tree);
         gtk_widget_show (scrolled);
 
+        gtk_container_add (GTK_CONTAINER (box), scrolled);
+        gtk_widget_show (box);
+
         frame = gtk_frame_new (_("Current Replacement List"));
         attributes = pango_attr_list_new ();
         attribute = pango_attr_weight_new (PANGO_WEIGHT_BOLD);
@@ -403,7 +409,7 @@ display_dialog (GtkAction* action,
                                   attributes);
         gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_NONE);
         gtk_container_add (GTK_CONTAINER (frame),
-                           scrolled);
+                           box);
         gtk_widget_show (frame);
 
         gtk_container_add (GTK_CONTAINER (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
