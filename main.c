@@ -232,7 +232,18 @@ static void
 display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
-        ;
+        GtkWidget* dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
+                                                         GTK_WINDOW (window),
+                                                         GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
+                                                         GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT,
+                                                         NULL);
+
+        gtk_dialog_set_default_response (GTK_DIALOG (dialog),
+                                         GTK_RESPONSE_ACCEPT);
+
+        gtk_dialog_run (GTK_DIALOG (dialog));
+
+        gtk_widget_destroy (dialog);
 }
 
 int
