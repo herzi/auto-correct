@@ -232,13 +232,15 @@ int
 main (int   argc,
       char**argv)
 {
-        GtkTextIter  iter;
-        GtkWidget* box;
+        GtkUIManager * manager;
+        GtkTextIter    iter;
+        GtkWidget    * box;
         GtkWidget* entry;
         GtkWidget* scrolled;
         GtkWidget* view;
-        GtkWidget* window;
-        GString    * string;
+        GtkWidget    * window;
+        GString      * string;
+        GError       * error = NULL;
         GList        * completion;
         xmlSAXHandler  sax;
 
@@ -250,6 +252,23 @@ main (int   argc,
         sax.endElementNs   = end_element_ns;
 
         xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, NULL);
+
+        manager = gtk_ui_manager_new ();
+        if (!gtk_ui_manager_add_ui_from_string (manager,
+                                                "<menubar name='menus'><menu action='File'>"
+                                                //  "<menuitem action='Preferences' />"
+                                                //  "<separator />"
+                                                  "<menuitem action='Preferences' />"
+                                                "</menu></menubar>",
+                                                -1,
+                                                &error))
+        {
+                g_warning ("Error building main window: %s",
+                           error->message);
+                g_error_free (error);
+
+                return 1;
+        }
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
         gtk_window_set_title (GTK_WINDOW (window), _("Auto-correction demo..."));
