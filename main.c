@@ -349,7 +349,10 @@ display_dialog (GtkAction* action,
         PangoAttribute   * attribute;
         PangoAttrList    * attributes;
         GtkListStore     * store;
+        GtkWidget        * alignment;
         GtkWidget        * box;
+        GtkWidget        * button_add;
+        GtkWidget        * button_remove;
         GtkWidget        * entry_after;
         GtkWidget        * entry_before;
         GtkWidget        * frame;
@@ -373,8 +376,9 @@ display_dialog (GtkAction* action,
 
         box = gtk_vbox_new (FALSE, 0);
 
-        table = gtk_table_new (1, 2, FALSE);
+        table = gtk_table_new (2, 3, FALSE);
 
+        /* FIXME: connect entry sizes to the column sizes... */
         entry_before = gtk_entry_new ();
         gtk_widget_show (entry_before);
         gtk_table_attach (GTK_TABLE (table), entry_before,
@@ -382,7 +386,20 @@ display_dialog (GtkAction* action,
         entry_after = gtk_entry_new ();
         gtk_widget_show (entry_after);
         gtk_table_attach (GTK_TABLE (table), entry_after,
-                          1, 2, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+                          1, 3, 0, 1, GTK_FILL | GTK_EXPAND, GTK_FILL, 0, 0);
+        button_add = gtk_button_new_from_stock (GTK_STOCK_ADD);
+        gtk_widget_show (button_add);
+
+        alignment = gtk_alignment_new (1.0, 0.5, 0.0, 1.0);
+        gtk_container_add (GTK_CONTAINER (alignment), button_add);
+        gtk_widget_show (alignment);
+        gtk_table_attach (GTK_TABLE (table), alignment,
+                          1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+
+        button_remove = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
+        gtk_widget_show (button_remove);
+        gtk_table_attach (GTK_TABLE (table), button_remove,
+                          2, 3, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
         gtk_widget_show (table);
 
         gtk_box_pack_start (GTK_BOX (box), table,
