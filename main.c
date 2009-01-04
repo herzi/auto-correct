@@ -286,33 +286,41 @@ static void
 display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
-        GtkListStore* store;
-        GtkWidget   * scrolled;
-        GtkWidget   * tree;
-        GtkWidget   * dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
-                                                            GTK_WINDOW (window),
-                                                            GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
-                                                            GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT,
-                                                            NULL);
-        GList       * iter;
+        GtkTreeViewColumn* column;
+        GtkListStore     * store;
+        GtkWidget        * scrolled;
+        GtkWidget        * tree;
+        GtkWidget        * dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
+                                                                 GTK_WINDOW (window),
+                                                                 GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
+                                                                 GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT,
+                                                                 NULL);
+        GList            * iter;
+        gint               columns;
 
         gtk_dialog_set_default_response (GTK_DIALOG (dialog),
                                          GTK_RESPONSE_ACCEPT);
         gtk_window_set_default_size (GTK_WINDOW (dialog), 400, 300);
 
         tree = gtk_tree_view_new ();
-        gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
-                                                    _("Before"), gtk_cell_renderer_text_new (),
-                                                    render_before_column, NULL,
-                                                    NULL);
-        gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
-                                                    _("After"), gtk_cell_renderer_text_new (),
-                                                    render_after_column, NULL,
-                                                    NULL);
-        gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
-                                                    _("Follows Whitespace"), gtk_cell_renderer_toggle_new (),
-                                                    render_after_whitespace_column, NULL,
-                                                    NULL);
+        columns = gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
+                                                              _("Before"), gtk_cell_renderer_text_new (),
+                                                              render_before_column, NULL,
+                                                              NULL);
+        column = gtk_tree_view_get_column (GTK_TREE_VIEW (tree), columns - 1);
+        gtk_tree_view_column_set_expand (column, TRUE);
+        columns = gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
+                                                              _("After"), gtk_cell_renderer_text_new (),
+                                                              render_after_column, NULL,
+                                                              NULL);
+        column = gtk_tree_view_get_column (GTK_TREE_VIEW (tree), columns - 1);
+        gtk_tree_view_column_set_expand (column, TRUE);
+        columns = gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
+                                                              _("Follows Whitespace"), gtk_cell_renderer_toggle_new (),
+                                                              render_after_whitespace_column, NULL,
+                                                              NULL);
+        column = gtk_tree_view_get_column (GTK_TREE_VIEW (tree), columns - 1);
+        gtk_tree_view_column_set_expand (column, FALSE);
         gtk_widget_show (tree);
 
         scrolled = gtk_scrolled_window_new (NULL, NULL);
