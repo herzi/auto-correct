@@ -232,13 +232,15 @@ static void
 display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
-        GtkWidget* scrolled;
-        GtkWidget* tree;
-        GtkWidget* dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
-                                                         GTK_WINDOW (window),
-                                                         GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
-                                                         GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT,
-                                                         NULL);
+        GtkListStore* store;
+        GtkWidget   * scrolled;
+        GtkWidget   * tree;
+        GtkWidget   * dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
+                                                            GTK_WINDOW (window),
+                                                            GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
+                                                            GTK_STOCK_CLOSE, GTK_RESPONSE_ACCEPT,
+                                                            NULL);
+        GList       * iter;
 
         gtk_dialog_set_default_response (GTK_DIALOG (dialog),
                                          GTK_RESPONSE_ACCEPT);
@@ -254,6 +256,18 @@ display_dialog (GtkAction* action,
 
         gtk_box_pack_start_defaults (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
                                      scrolled);
+
+        store = gtk_list_store_new (1, G_TYPE_POINTER); /* FIXME: symbolic names */
+        for (iter = completions; iter; iter = g_list_next (iter)) {
+                GtkTreeIter  tree_iter;
+
+                gtk_list_store_append (store, &tree_iter);
+                gtk_list_store_set    (store, &tree_iter,
+                                       0, iter->data, /* FIXME: symbolic names */
+                                       -1);
+        }
+        gtk_tree_view_set_model (GTK_TREE_VIEW (tree), GTK_TREE_MODEL (store));
+        g_object_unref (store);
 
         gtk_dialog_run (GTK_DIALOG (dialog));
 
