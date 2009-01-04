@@ -44,26 +44,7 @@ struct _AutoCompletion {
         AutoCompletionFlags  flags;
 };
 
-static AutoCompletion auto_completion[] = {
-        {"...", "…"},
-        {"\"",  "»",  AUTO_COMPLETION_AFTER_WHITESPACE}, /* or this one: "„" */
-        {"\"",  "«"},                                    /* or this one: "“" */
-        {"-- ", "— ", AUTO_COMPLETION_AFTER_WHITESPACE},
-        {"?? ", "⁇ "},
-        {"?! ", "⁈ "},
-        {"!? ", "⁉ "},
-        {"!! ", "‼ "},
-        {"'", "‘",    AUTO_COMPLETION_AFTER_WHITESPACE},
-        {"'", "’"},
-        {"°C", "℃"},
-        {"°F", "℉"},
-        {"c/o", "℅"},
-        {"(c)", "©"},
-        {"(R)", "®"},
-        {"\n- ", "\n• "},
-        {"->",  "→"},
-        {":-)", "☺"}
-};
+static GList* completions = NULL;
 
 static void
 entry_cursor_position_changed (GtkEntry  * entry,
@@ -75,7 +56,8 @@ entry_cursor_position_changed (GtkEntry  * entry,
         if (text_inserted) {
                 gchar const* text = gtk_entry_get_text (entry);
                 gchar const* text_cursor = text;
-                gsize i;
+                gsize        i;
+                GList      * completion;
 
                 /* avoid recursion */
                 text_inserted = FALSE;
@@ -86,18 +68,19 @@ entry_cursor_position_changed (GtkEntry  * entry,
 
                 auto_complete = TRUE;
 
-                for (i = 0; i < G_N_ELEMENTS (auto_completion); i++) {
-                        if (text_cursor - text >= strlen (auto_completion[i].before)) {
+                for (completion = completions; completion; completion = g_list_next (completion)) {
+                        AutoCompletion auto_completion = *((AutoCompletion*)(completion->data));
+                        if (text_cursor - text >= strlen (auto_completion.before)) {
                                 gsize j;
-                                for (j = 0; j < strlen (auto_completion[i].before); j++) {
-                                        if (text_cursor[j-strlen (auto_completion[i].before)] != auto_completion[i].before[j]) {
+                                for (j = 0; j < strlen (auto_completion.before); j++) {
+                                        if (text_cursor[j-strlen (auto_completion.before)] != auto_completion.before[j]) {
                                                 break;
                                         }
                                 }
-                                if ((auto_completion[i].flags & AUTO_COMPLETION_AFTER_WHITESPACE) != 0) {
-                                        if (text_cursor - strlen (auto_completion[i].before) - text <= 0) {
+                                if ((auto_completion.flags & AUTO_COMPLETION_AFTER_WHITESPACE) != 0) {
+                                        if (text_cursor - strlen (auto_completion.before) - text <= 0) {
                                         } else {
-                                                gchar* maybe_whitespace = g_utf8_prev_char (&text_cursor[-strlen (auto_completion[i].before)]);
+                                                gchar* maybe_whitespace = g_utf8_prev_char (&text_cursor[-strlen (auto_completion.before)]);
                                                 gunichar maybe_whitespace_c = g_utf8_get_char (maybe_whitespace);
 
                                                 if (!g_unichar_isspace (maybe_whitespace_c)) {
@@ -105,29 +88,29 @@ entry_cursor_position_changed (GtkEntry  * entry,
                                                 }
                                         }
                                 }
-                                if (j >= strlen (auto_completion[i].before)) {
+                                if (j >= strlen (auto_completion.before)) {
                                         GString* string = g_string_new (text);
 
-                                        if (strlen (auto_completion[i].before) == strlen (auto_completion[i].after)) {
+                                        if (strlen (auto_completion.before) == strlen (auto_completion.after)) {
                                                 g_string_overwrite (string,
-                                                                    text_cursor - strlen (auto_completion[i].before) - text,
-                                                                    auto_completion[i].after);
-                                        } else if (strlen (auto_completion[i].before) > strlen (auto_completion[i].after)) {
+                                                                    text_cursor - strlen (auto_completion.before) - text,
+                                                                    auto_completion.after);
+                                        } else if (strlen (auto_completion.before) > strlen (auto_completion.after)) {
                                                 g_string_overwrite (string,
-                                                                    text_cursor - strlen (auto_completion[i].before) - text,
-                                                                    auto_completion[i].after);
+                                                                    text_cursor - strlen (auto_completion.before) - text,
+                                                                    auto_completion.after);
                                                 g_string_erase (string,
-                                                                text_cursor - strlen (auto_completion[i].before) + strlen (auto_completion[i].after) - text,
-                                                                strlen (auto_completion[i].after) - strlen (auto_completion[i].before));
+                                                                text_cursor - strlen (auto_completion.before) + strlen (auto_completion.after) - text,
+                                                                strlen (auto_completion.after) - strlen (auto_completion.before));
                                         } else {
-                                                /* strlen (auto_completion[i].before) < strlen (auto_completion[i].after) */
+                                                /* strlen (auto_completion.before) < strlen (auto_completion.after) */
                                                 g_string_overwrite_len (string,
-                                                                        text_cursor - strlen (auto_completion[i].before) - text,
-                                                                        auto_completion[i].after,
-                                                                        strlen (auto_completion[i].before));
+                                                                        text_cursor - strlen (auto_completion.before) - text,
+                                                                        auto_completion.after,
+                                                                        strlen (auto_completion.before));
                                                 g_string_insert (string,
                                                                  text_cursor - text,
-                                                                 auto_completion[i].after + strlen (auto_completion[i].before));
+                                                                 auto_completion.after + strlen (auto_completion.before));
                                         }
 
                                         gtk_entry_set_text (entry, string->str);
@@ -136,8 +119,8 @@ entry_cursor_position_changed (GtkEntry  * entry,
 
                                         gtk_editable_set_position (GTK_EDITABLE (entry),
                                                                    cursor -
-                                                                   g_utf8_strlen (auto_completion[i].before, -1) +
-                                                                   g_utf8_strlen (auto_completion[i].after, -1));
+                                                                   g_utf8_strlen (auto_completion.before, -1) +
+                                                                   g_utf8_strlen (auto_completion.after, -1));
 
                                         /* FIXME: add a mark to display some stuff later */
                                 }
@@ -181,6 +164,26 @@ main (int   argc,
         GtkWidget* window;
         GString    * string;
         gsize        i;
+        AutoCompletion auto_completion[] = {
+                {"...", "…"},
+                {"\"",  "»",  AUTO_COMPLETION_AFTER_WHITESPACE}, /* or this one: "„" */
+                {"\"",  "«"},                                    /* or this one: "“" */
+                {"-- ", "— ", AUTO_COMPLETION_AFTER_WHITESPACE},
+                {"?? ", "⁇ "},
+                {"?! ", "⁈ "},
+                {"!? ", "⁉ "},
+                {"!! ", "‼ "},
+                {"'", "‘",    AUTO_COMPLETION_AFTER_WHITESPACE},
+                {"'", "’"},
+                {"°C", "℃"},
+                {"°F", "℉"},
+                {"c/o", "℅"},
+                {"(c)", "©"},
+                {"(R)", "®"},
+                {"\n- ", "\n• "},
+                {"->",  "→"},
+                {":-)", "☺"}
+        };
 
         gtk_init (&argc, &argv);
 
@@ -220,6 +223,7 @@ main (int   argc,
 
         string = g_string_new ("");
         for (i = 0; i < G_N_ELEMENTS (auto_completion); i++) {
+                completions = g_list_prepend (completions, &auto_completion[i]);
                 g_string_set_size (string, 0);
 
                 g_string_append_printf (string,
@@ -233,6 +237,7 @@ main (int   argc,
                                         string->str,
                                         -1);
         }
+        completions = g_list_reverse (completions);
         g_string_free (string, TRUE);
 
         gtk_widget_show (view);
