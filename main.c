@@ -232,6 +232,7 @@ static void
 display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
+        GtkWidget* scrolled;
         GtkWidget* tree;
         GtkWidget* dialog = gtk_dialog_new_with_buttons (_("Preferences - Auto Correction"),
                                                          GTK_WINDOW (window),
@@ -246,8 +247,13 @@ display_dialog (GtkAction* action,
         tree = gtk_tree_view_new ();
         gtk_widget_show (tree);
 
+        scrolled = gtk_scrolled_window_new (NULL, NULL);
+        gtk_container_add (GTK_CONTAINER (scrolled),
+                           tree);
+        gtk_widget_show (scrolled);
+
         gtk_box_pack_start_defaults (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
-                                     tree);
+                                     scrolled);
 
         gtk_dialog_run (GTK_DIALOG (dialog));
 
