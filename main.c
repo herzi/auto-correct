@@ -247,6 +247,24 @@ render_before_column (GtkTreeViewColumn* column,
 }
 
 static void
+render_after_column (GtkTreeViewColumn* column,
+                     GtkCellRenderer  * renderer,
+                     GtkTreeModel     * model,
+                     GtkTreeIter      * iter,
+                     gpointer           user_data)
+{
+        AutoCompletion* cmp = NULL;
+
+        gtk_tree_model_get (model, iter,
+                            0, &cmp, /* FIXME: symbolic names */
+                            -1);
+
+        g_object_set (renderer,
+                      "text", cmp->after,
+                      NULL);
+}
+
+static void
 display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
@@ -268,6 +286,10 @@ display_dialog (GtkAction* action,
         gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
                                                     _("Before"), gtk_cell_renderer_text_new (),
                                                     render_before_column, NULL,
+                                                    NULL);
+        gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
+                                                    _("After"), gtk_cell_renderer_text_new (),
+                                                    render_after_column, NULL,
                                                     NULL);
         gtk_widget_show (tree);
 
