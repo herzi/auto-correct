@@ -38,6 +38,10 @@
 static gboolean text_inserted = FALSE;
 static gboolean auto_complete = FALSE;
 
+static GtkWidget* dialog_entry_before = NULL;
+static GtkWidget* dialog_entry_after  = NULL;
+static GtkWidget* dialog_button_add   = NULL;
+
 typedef enum {
         AUTO_COMPLETION_NONE = 0,
         AUTO_COMPLETION_AFTER_WHITESPACE = 1
@@ -356,10 +360,7 @@ display_dialog (GtkAction* action,
         GtkListStore     * store;
         GtkWidget        * alignment;
         GtkWidget        * box;
-        GtkWidget        * button_add;
         GtkWidget        * button_remove;
-        GtkWidget        * entry_after;
-        GtkWidget        * entry_before;
         GtkWidget        * frame;
         GtkWidget        * scrolled;
         GtkWidget        * table;
@@ -384,24 +385,24 @@ display_dialog (GtkAction* action,
         table = gtk_table_new (2, 3, FALSE);
 
         /* FIXME: connect entry sizes to the column sizes... */
-        entry_before = gtk_entry_new ();
-        entry_after = gtk_entry_new ();
-        g_signal_connect_swapped (entry_before, "activate",
-                                  G_CALLBACK (gtk_widget_grab_focus), entry_after);
-        gtk_widget_show (entry_before);
-        gtk_table_attach (GTK_TABLE (table), entry_before,
+        dialog_entry_before = gtk_entry_new ();
+        dialog_entry_after = gtk_entry_new ();
+        g_signal_connect_swapped (dialog_entry_before, "activate",
+                                  G_CALLBACK (gtk_widget_grab_focus), dialog_entry_after);
+        gtk_widget_show (dialog_entry_before);
+        gtk_table_attach (GTK_TABLE (table), dialog_entry_before,
                           0, 1, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
 
-        button_add = gtk_button_new_from_stock (GTK_STOCK_ADD);
-        g_signal_connect_swapped (entry_after, "activate",
-                                  G_CALLBACK (click_it), button_add);
-        gtk_widget_show (entry_after);
-        gtk_table_attach (GTK_TABLE (table), entry_after,
+        dialog_button_add = gtk_button_new_from_stock (GTK_STOCK_ADD);
+        g_signal_connect_swapped (dialog_entry_after, "activate",
+                                  G_CALLBACK (click_it), dialog_button_add);
+        gtk_widget_show (dialog_entry_after);
+        gtk_table_attach (GTK_TABLE (table), dialog_entry_after,
                           1, 3, 0, 1, GTK_FILL | GTK_EXPAND, GTK_FILL, 0, 0);
-        gtk_widget_show (button_add);
+        gtk_widget_show (dialog_button_add);
 
         alignment = gtk_alignment_new (1.0, 0.5, 0.0, 1.0);
-        gtk_container_add (GTK_CONTAINER (alignment), button_add);
+        gtk_container_add (GTK_CONTAINER (alignment), dialog_button_add);
         gtk_widget_show (alignment);
         gtk_table_attach (GTK_TABLE (table), alignment,
                           1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
