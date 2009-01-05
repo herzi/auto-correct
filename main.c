@@ -400,6 +400,27 @@ add_button_clicked (GtkButton  * button,
 }
 
 static void
+remove_button_clicked (GtkButton  * button,
+                       GtkTreeView* treeview)
+{
+        AutoCompletion* cmp;
+        GtkTreeModel  * model;
+        GtkTreeIter     iter;
+
+        g_return_if_fail (gtk_tree_selection_get_selected (gtk_tree_view_get_selection (treeview), &model, &iter));
+
+        gtk_tree_model_get (model, &iter,
+                            0, &cmp, /* FIXME: symbolic names */
+                            -1);
+
+        gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
+
+        completions = g_list_remove (completions, cmp);
+
+        g_slice_free (AutoCompletion, cmp);
+}
+
+static void
 display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
@@ -469,6 +490,8 @@ display_dialog (GtkAction* action,
         button_remove = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
         g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (tree)), "changed",
                           G_CALLBACK (update_remove_sensitivity), button_remove);
+        g_signal_connect (button_remove, "clicked",
+                          G_CALLBACK (remove_button_clicked), tree);
 
         gtk_widget_show (button_remove);
         gtk_table_attach (GTK_TABLE (table), button_remove,
