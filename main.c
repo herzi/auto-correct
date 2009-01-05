@@ -347,7 +347,23 @@ ac_xml_escape (gchar const* string)
 static void
 click_it (GtkButton* button)
 {
-        g_signal_emit_by_name (button, "activate");
+        if (GTK_WIDGET_SENSITIVE (button)) {
+                g_signal_emit_by_name (button, "activate");
+        }
+}
+
+static void
+update_button_sensitivity (void)
+{
+        gtk_widget_set_sensitive (dialog_button_add,
+                                  gtk_entry_get_text_length (GTK_ENTRY (dialog_entry_before)) > 0 &&
+                                  gtk_entry_get_text_length (GTK_ENTRY (dialog_entry_after)));
+}
+
+static void
+add_button_clicked (void)
+{
+        g_print ("add\n");
 }
 
 static void
@@ -400,6 +416,15 @@ display_dialog (GtkAction* action,
         gtk_table_attach (GTK_TABLE (table), dialog_entry_after,
                           1, 3, 0, 1, GTK_FILL | GTK_EXPAND, GTK_FILL, 0, 0);
         gtk_widget_show (dialog_button_add);
+
+        g_signal_connect (dialog_entry_before, "notify::text",
+                          G_CALLBACK (update_button_sensitivity), NULL);
+        g_signal_connect (dialog_entry_after,  "notify::text",
+                          G_CALLBACK (update_button_sensitivity), NULL);
+        update_button_sensitivity ();
+
+        g_signal_connect (dialog_button_add, "clicked",
+                          G_CALLBACK (add_button_clicked), NULL);
 
         alignment = gtk_alignment_new (1.0, 0.5, 0.0, 1.0);
         gtk_container_add (GTK_CONTAINER (alignment), dialog_button_add);
