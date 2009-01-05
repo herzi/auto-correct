@@ -361,6 +361,14 @@ update_button_sensitivity (void)
 }
 
 static void
+update_remove_sensitivity (GtkTreeSelection* selection,
+                           GtkWidget       * button)
+{
+        gtk_widget_set_sensitive (button,
+                                  gtk_tree_selection_count_selected_rows (selection) > 0);
+}
+
+static void
 add_button_clicked (GtkButton  * button,
                     GtkTreeView* treeview)
 {
@@ -459,6 +467,9 @@ display_dialog (GtkAction* action,
                           1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 
         button_remove = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
+        g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (tree)), "changed",
+                          G_CALLBACK (update_remove_sensitivity), button_remove);
+
         gtk_widget_show (button_remove);
         gtk_table_attach (GTK_TABLE (table), button_remove,
                           2, 3, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
