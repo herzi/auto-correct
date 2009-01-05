@@ -361,9 +361,34 @@ update_button_sensitivity (void)
 }
 
 static void
-add_button_clicked (void)
+add_button_clicked (GtkButton  * button,
+                    GtkTreeView* treeview)
 {
-        g_print ("add\n");
+        AutoCompletion* cmp = g_slice_new0 (AutoCompletion);
+        GtkListStore  * store = GTK_LIST_STORE (gtk_tree_view_get_model (treeview));
+        GtkTreePath   * path;
+        GtkTreeIter     iter;
+
+        cmp->before = g_strdup (gtk_entry_get_text (GTK_ENTRY (dialog_entry_before)));
+        cmp->after  = g_strdup (gtk_entry_get_text (GTK_ENTRY (dialog_entry_after)));
+
+        completions = g_list_prepend (completions, cmp);
+
+        gtk_list_store_insert_after (store, &iter, NULL);
+        gtk_list_store_set          (store, &iter,
+                                     0, cmp, /* FIXME: symbolic names */
+                                     -1);
+
+        path = gtk_tree_model_get_path (GTK_TREE_MODEL (store),
+                                        &iter);
+
+        gtk_tree_view_scroll_to_cell (treeview,
+                                      path,
+                                      NULL,
+                                      FALSE,
+                                      0.0, 0.0);
+
+        gtk_tree_path_free (path);
 }
 
 static void
@@ -423,8 +448,9 @@ display_dialog (GtkAction* action,
                           G_CALLBACK (update_button_sensitivity), NULL);
         update_button_sensitivity ();
 
+        tree = gtk_tree_view_new ();
         g_signal_connect (dialog_button_add, "clicked",
-                          G_CALLBACK (add_button_clicked), NULL);
+                          G_CALLBACK (add_button_clicked), tree);
 
         alignment = gtk_alignment_new (1.0, 0.5, 0.0, 1.0);
         gtk_container_add (GTK_CONTAINER (alignment), dialog_button_add);
@@ -441,7 +467,6 @@ display_dialog (GtkAction* action,
         gtk_box_pack_start (GTK_BOX (box), table,
                             FALSE, FALSE, 0);
 
-        tree = gtk_tree_view_new ();
         /* FIXME: make editable; make draggable; ... */
         columns = gtk_tree_view_insert_column_with_data_func (GTK_TREE_VIEW (tree), -1,
                                                               _("Replace"), gtk_cell_renderer_text_new (),
