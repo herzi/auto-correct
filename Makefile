@@ -1,6 +1,8 @@
 all: auto-correct
 
 auto_correct_SOURCES=\
+	ac-auto-correction.c \
+	ac-auto-correction.h \
 	main.c \
 	$(NULL)
 
