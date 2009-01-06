@@ -665,14 +665,37 @@ save_to_file (GError**error)
         return TRUE;
 }
 
+static void
+language_selected (GtkAction* action,
+                   GtkAction* current)
+{
+        gchar* label = NULL;
+        g_object_get (current, "label", &label, NULL);
+        g_print ("%s\n", label);
+        g_free (label);
+}
+
 int
 main (int   argc,
       char**argv)
 {
+        GtkRadioActionEntry  radio_entries[] = {
+                {"None", NULL, N_("None"),
+                 NULL, NULL, // FIXME: add tooltip
+                 0}, /* FIXME: symbolic name */
+                {"English", NULL, N_("English"),
+                 NULL, NULL, // FIXME: add tooltip
+                 1}, /* FIXME: symbolic name */
+                {"German", NULL, N_("German"),
+                 NULL, NULL, // FIXME: add tooltip
+                 2}, /* FIXME: symbolic name */
+                {"French", NULL, N_("French"),
+                 NULL, NULL, // FIXME: add tooltip
+                 3}  /* FIXME: symbolic name */
+        };
         GtkActionEntry  entries[] = {
-                {"File", NULL, N_("_Auto Correction"),
-                 NULL, NULL,
-                 NULL},
+                {"File", NULL, N_("_Auto Correction")},
+                {"Language", NULL, N_("_Language")},
                 {"Preferences", GTK_STOCK_PREFERENCES, NULL,
                  "<Ctrl>P", NULL, // FIXME: add tooltip
                  G_CALLBACK (display_dialog)},
@@ -710,6 +733,12 @@ main (int   argc,
                                       entries,
                                       G_N_ELEMENTS (entries),
                                       window);
+        gtk_action_group_add_radio_actions (actions,
+                                            radio_entries,
+                                            G_N_ELEMENTS (radio_entries),
+                                            0, /* FIXME: symbolic name */
+                                            G_CALLBACK (language_selected),
+                                            NULL);
 
         manager = gtk_ui_manager_new ();
         gtk_ui_manager_insert_action_group (manager,
@@ -720,6 +749,12 @@ main (int   argc,
                                                   "<menuitem action='Preferences' />"
                                                   "<separator />"
                                                   "<menuitem action='Quit' />"
+                                                "</menu><menu action='Language'>"
+                                                  "<menuitem action='None'/>"
+                                                  "<separator />"
+                                                  "<menuitem action='English'/>"
+                                                  "<menuitem action='German'/>"
+                                                  "<menuitem action='French'/>"
                                                 "</menu></menubar>",
                                                 -1,
                                                 &error))
