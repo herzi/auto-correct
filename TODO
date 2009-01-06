@@ -7,3 +7,7 @@ TODO list for auto-correct
    happened); this way we should be able to keep changes even if two processes
    change the data at the same time
 
+ * support disabling of system-installed defaults
+
+ * support merging multiple sets (system vs. user; generic vs. languages)
+

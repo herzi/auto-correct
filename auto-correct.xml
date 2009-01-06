@@ -2,8 +2,6 @@
 <!-- vim:set sw=2: -->
 <auto-correction xmlns='http://www.adeal.eu/auto-correct/0.0.1'>
   <entry before="..."    after="&#x2026;" />
-  <entry before="&quot;" after="»"  flags="after-whitespace" /> <!-- or this one: „ -->
-  <entry before="&quot;" after="«"  />                          <!-- or this one: “ -->
   <entry before="-- "    after="— " flags="after-whitespace" />
   <entry before="?? "    after="⁇ " />
   <entry before="?! "    after="⁈ " />

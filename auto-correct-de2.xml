@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- vim:set sw=2: -->
+<auto-correction xmlns='http://www.adeal.eu/auto-correct/0.0.1'>
+  <entry before="&quot;" after="„"  flags="after-whitespace" />
+  <entry before="&quot;" after="“"  />
+</auto-correction>
