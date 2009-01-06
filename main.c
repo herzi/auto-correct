@@ -49,23 +49,21 @@ typedef enum {
         AUTO_COMPLETION_AFTER_WHITESPACE = 1
 } AutoCompletionFlags;
 
-typedef struct _AutoCompletion AutoCompletion;
-
 struct _AutoCompletion {
         gchar const        * before;
         gchar const        * after;
         AutoCompletionFlags  flags;
 };
 
-static GList* completions = NULL;
-
-static gboolean save_to_file (GError**error);
+static gboolean save_to_file (AcAutoCorrection* ac,
+                              GError          **error);
 
 static void
 entry_cursor_position_changed (GtkEntry  * entry,
                                GParamSpec* pspec     G_GNUC_UNUSED,
-                               gpointer    user_data G_GNUC_UNUSED)
+                               gpointer    user_data)
 {
+        AcAutoCorrection* ac = AC_AUTO_CORRECTION (user_data);
         gint cursor = gtk_editable_get_position (GTK_EDITABLE (entry));
 
         if (text_inserted) {
@@ -83,7 +81,7 @@ entry_cursor_position_changed (GtkEntry  * entry,
 
                 auto_complete = TRUE;
 
-                for (completion = completions; completion; completion = g_list_next (completion)) {
+                for (completion = ac_auto_correction_get_corrections (ac); completion; completion = g_list_next (completion)) {
                         AutoCompletion auto_completion = *((AutoCompletion*)(completion->data));
                         if (text_cursor - text >= strlen (auto_completion.before)) {
                                 gsize j;
@@ -178,12 +176,16 @@ start_element_ns (gpointer      ctxt,
                   int           n_defaulted,
                   guchar const**attributes)
 {
-        gint i;
+        AcAutoCorrection* ac;
 
         g_return_if_fail (g_strcmp0 ("http://www.adeal.eu/auto-correct/0.0.1", (gchar const*)uri) == 0);
 
+        ac = AC_AUTO_CORRECTION (((xmlParserCtxt*)(ctxt))->_private);
+
         if (!strcmp ("entry", (gchar const*)local_name)) {
                 AutoCompletion* cmp = g_slice_new0 (AutoCompletion);
+                gint i;
+
                 for (i = 0; i < n_attributes; i++) {
                         if (g_strcmp0 ("before", (gchar const*)attributes[5*i]) == 0) {
                                 g_return_if_fail (!cmp->before);
@@ -215,7 +217,7 @@ start_element_ns (gpointer      ctxt,
                 g_return_if_fail (cmp->before != NULL);
                 g_return_if_fail (cmp->after  != NULL);
 
-                completions = g_list_prepend (completions, cmp);
+                ac_auto_correction_prepend (ac, cmp);
         } else if (!strcmp ("auto-correction", (gchar const*)local_name)) {
 #if 0
                 for (i = 0; i < n_namespaces; i++) {
@@ -237,7 +239,7 @@ end_element_ns (gpointer      ctxt,
 
         if (!g_strcmp0 ("entry", (gchar const*)local_name)) {
         } else if (!g_strcmp0 ("auto-correction", (gchar const*)local_name)) {
-                completions = g_list_reverse (completions);
+                ac_auto_correction_reverse (AC_AUTO_CORRECTION (((xmlParserCtxt*)(ctxt))->_private));
         }
 }
 
@@ -382,7 +384,7 @@ add_button_clicked (GtkButton  * button,
         cmp->before = g_strdup (gtk_entry_get_text (GTK_ENTRY (dialog_entry_before)));
         cmp->after  = g_strdup (gtk_entry_get_text (GTK_ENTRY (dialog_entry_after)));
 
-        completions = g_list_prepend (completions, cmp);
+        ac_auto_correction_prepend (AC_AUTO_CORRECTION (g_object_get_data (G_OBJECT (button), "ac")), cmp);
 
         gtk_list_store_insert_after (store, &iter, NULL);
         gtk_list_store_set          (store, &iter,
@@ -417,7 +419,7 @@ remove_button_clicked (GtkButton  * button,
 
         gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
 
-        completions = g_list_remove (completions, cmp);
+        ac_auto_correction_remove (AC_AUTO_CORRECTION (g_object_get_data (G_OBJECT (button), "ac")), cmp);
 
         g_slice_free (AutoCompletion, cmp);
 }
@@ -427,6 +429,7 @@ display_dialog (GtkAction* action,
                 GtkWidget* window)
 {
         GtkTreeViewColumn* column;
+        AcAutoCorrection * ac;
         PangoAttribute   * attribute;
         PangoAttrList    * attributes;
         GtkListStore     * store;
@@ -445,6 +448,8 @@ display_dialog (GtkAction* action,
         GError           * error = NULL;
         GList            * iter;
         gint               columns;
+
+        ac = g_object_get_data (G_OBJECT (window), "ac");
 
         gtk_dialog_set_default_response (GTK_DIALOG (dialog),
                                          GTK_RESPONSE_ACCEPT);
@@ -466,6 +471,9 @@ display_dialog (GtkAction* action,
                           0, 1, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
 
         dialog_button_add = gtk_button_new_from_stock (GTK_STOCK_ADD);
+        g_object_set_data (G_OBJECT (dialog_button_add),
+                           "ac",
+                           ac);
         g_signal_connect_swapped (dialog_entry_after, "activate",
                                   G_CALLBACK (click_it), dialog_button_add);
         gtk_widget_show (dialog_entry_after);
@@ -490,6 +498,9 @@ display_dialog (GtkAction* action,
                           1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 
         button_remove = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
+        g_object_set_data (G_OBJECT (button_remove),
+                           "ac",
+                           ac);
         g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (tree)), "changed",
                           G_CALLBACK (update_remove_sensitivity), button_remove);
         g_signal_connect (button_remove, "clicked",
@@ -550,7 +561,7 @@ display_dialog (GtkAction* action,
         /* FIXME: add a label "To change the values, just double-click into a field" */
 
         store = gtk_list_store_new (1, G_TYPE_POINTER); /* FIXME: symbolic names */
-        for (iter = completions; iter; iter = g_list_next (iter)) {
+        for (iter = ac_auto_correction_get_corrections (ac); iter; iter = g_list_next (iter)) {
                 GtkTreeIter  tree_iter;
 
                 gtk_list_store_append (store, &tree_iter);
@@ -566,7 +577,7 @@ display_dialog (GtkAction* action,
         gtk_widget_destroy (dialog);
 
         /* now save the stuff */
-        save_to_file (&error);
+        save_to_file (ac, &error);
 }
 
 static void
@@ -608,7 +619,8 @@ fd_printf (int          fd,
 }
 
 static gboolean
-save_to_file (GError**error)
+save_to_file (AcAutoCorrection* ac,
+              GError          **error)
 {
                 struct flock fl = {F_WRLCK, SEEK_SET, 0, 0, 0};
                 int fd = -1;
@@ -646,7 +658,7 @@ save_to_file (GError**error)
                 fd_printf (fd, error, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 fd_printf (fd, error, "<!-- vim:set sw=2: -->\n");
                 fd_printf (fd, error, "<auto-correction xmlns=\"http://www.adeal.eu/auto-correct/0.0.1\">\n");
-                for (iter = completions; iter; iter = g_list_next (iter)) {
+                for (iter = ac_auto_correction_get_corrections (ac); iter; iter = g_list_next (iter)) {
                         AutoCompletion* cmp = iter->data;
                         gchar* before = ac_xml_escape (cmp->before);
                         gchar* after  = ac_xml_escape (cmp->after);
@@ -732,6 +744,9 @@ main (int   argc,
         /* watch and reload file */
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+        g_object_set_data (G_OBJECT (window),
+                           "ac",
+                           ac);
 
         actions = gtk_action_group_new ("main-window");
         gtk_action_group_add_actions (actions,
@@ -786,7 +801,7 @@ main (int   argc,
 
         entry = gtk_entry_new ();
         g_signal_connect (entry, "notify::cursor-position",
-                          G_CALLBACK (entry_cursor_position_changed), NULL);
+                          G_CALLBACK (entry_cursor_position_changed), ac);
         g_signal_connect_after (entry, "insert-text",
                                 G_CALLBACK (entry_text_inserted), NULL);
         g_signal_connect_after (entry, "delete-text",
@@ -811,7 +826,7 @@ main (int   argc,
                                 -1);
 
         string = g_string_new ("");
-        for (completion = completions; completion; completion = g_list_next (completion)) {
+        for (completion = ac_auto_correction_get_corrections (ac); completion; completion = g_list_next (completion)) {
                 AutoCompletion* auto_completion = completion->data;
                 g_string_set_size (string, 0);
 

@@ -32,6 +32,8 @@ typedef struct _AcAutoCorrection        AcAutoCorrection;
 typedef struct _AcAutoCorrectionPrivate AcAutoCorrectionPrivate;
 typedef struct _AcAutoCorrectionClass   AcAutoCorrectionClass;
 
+typedef struct _AutoCompletion AutoCompletion;
+
 #define AC_TYPE_AUTO_CORRECTION         (ac_auto_correction_get_type ())
 #define AC_AUTO_CORRECTION(i)           (G_TYPE_CHECK_INSTANCE_CAST ((i), AC_TYPE_AUTO_CORRECTION, AcAutoCorrection))
 #define AC_AUTO_CORRECTION_CLASS(c)     (G_TYPE_CHECK_CLASS_CAST ((c), AC_TYPE_AUTO_CORRCTION, AcAutoCorrectionClass))
@@ -39,8 +41,14 @@ typedef struct _AcAutoCorrectionClass   AcAutoCorrectionClass;
 #define AC_IS_AUTO_CORRECTION_CLASS(c)  (G_TYPE_CHECK_CLASS_TYPE ((c), AC_TYPE_AUTO_CORRECTION))
 #define AC_AUTO_CORRECTION_GET_CLASS(i) (G_TYPE_INSTANCE_GET_CLASS ((i), AC_TYPE_AUTO_CORRECTION, AcAutoCorrection))
 
-GType             ac_auto_correction_get_type (void);
-AcAutoCorrection* ac_auto_correction_new      (void);
+GType             ac_auto_correction_get_type        (void);
+AcAutoCorrection* ac_auto_correction_new             (void);
+GList*            ac_auto_correction_get_corrections (AcAutoCorrection* self);
+void              ac_auto_correction_prepend         (AcAutoCorrection* self,
+                                                      AutoCompletion  * cmp);
+void              ac_auto_correction_remove          (AcAutoCorrection* self,
+                                                      AutoCompletion  * cmp);
+void              ac_auto_correction_reverse         (AcAutoCorrection* self);
 
 struct _AcAutoCorrection {
         GObject                  base_instance;

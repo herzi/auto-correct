@@ -23,15 +23,25 @@
 
 #include "ac-auto-correction.h"
 
+struct _AcAutoCorrectionPrivate {
+        GList* corrections;
+};
+
+#define P(i) (((AcAutoCorrection*)(i))->_private)
+
 G_DEFINE_TYPE (AcAutoCorrection, ac_auto_correction, G_TYPE_OBJECT);
 
 static void
 ac_auto_correction_init (AcAutoCorrection* self)
-{}
+{
+        P (self) = G_TYPE_INSTANCE_GET_PRIVATE (self, AC_TYPE_AUTO_CORRECTION, AcAutoCorrectionPrivate);
+}
 
 static void
 ac_auto_correction_class_init (AcAutoCorrectionClass* self_class)
-{}
+{
+        g_type_class_add_private (self_class, sizeof (AcAutoCorrectionPrivate));
+}
 
 AcAutoCorrection*
 ac_auto_correction_new (void)
@@ -40,3 +50,39 @@ ac_auto_correction_new (void)
                              NULL);
 }
 
+GList*
+ac_auto_correction_get_corrections (AcAutoCorrection* self)
+{
+        g_return_val_if_fail (AC_IS_AUTO_CORRECTION (self), NULL);
+
+        return P (self)->corrections;
+}
+
+void
+ac_auto_correction_prepend (AcAutoCorrection* self,
+                            AutoCompletion  * cmp)
+{
+        g_return_if_fail (AC_IS_AUTO_CORRECTION (self));
+        g_return_if_fail (cmp != NULL);
+
+        P (self)->corrections = g_list_prepend (P (self)->corrections, cmp);
+}
+
+void
+ac_auto_correction_remove (AcAutoCorrection* self,
+                           AutoCompletion  * cmp)
+{
+        g_return_if_fail (AC_IS_AUTO_CORRECTION (self));
+        g_return_if_fail (cmp != NULL);
+        g_return_if_fail (g_list_find (P (self)->corrections, cmp));
+
+        P (self)->corrections = g_list_remove (P (self)->corrections, cmp);
+}
+
+void
+ac_auto_correction_reverse (AcAutoCorrection* self)
+{
+        g_return_if_fail (AC_IS_AUTO_CORRECTION (self));
+
+        P (self)->corrections = g_list_reverse (P (self)->corrections);
+}
