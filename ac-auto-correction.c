@@ -1,4 +1,4 @@
-/* This file is part of ...
+/* This file is part of auto-correct
  *
  * AUTHORS
  *     Sven Herzberg  <sven@imendio.com>
@@ -22,4 +22,21 @@
  */
 
 #include "ac-auto-correction.h"
+
+G_DEFINE_TYPE (AcAutoCorrection, ac_auto_correction, G_TYPE_OBJECT);
+
+static void
+ac_auto_correction_init (AcAutoCorrection* self)
+{}
+
+static void
+ac_auto_correction_class_init (AcAutoCorrectionClass* self_class)
+{}
+
+AcAutoCorrection*
+ac_auto_correction_new (void)
+{
+        return g_object_new (AC_TYPE_AUTO_CORRECTION,
+                             NULL);
+}
 

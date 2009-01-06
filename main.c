@@ -30,6 +30,8 @@
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 
+#include "ac-auto-correction.h"
+
 #include <glib/gi18n.h>
 
 #define AUTO_CORRECT_NOT_AVAILABLE _("Auto-correction doesn't work here, yet")
@@ -693,6 +695,7 @@ main (int   argc,
                  NULL, NULL, // FIXME: add tooltip
                  3}  /* FIXME: symbolic name */
         };
+        AcAutoCorrection   * ac;
         GtkActionEntry  entries[] = {
                 {"File", NULL, N_("_Auto Correction")},
                 {"Language", NULL, N_("_Language")},
@@ -719,11 +722,13 @@ main (int   argc,
         gtk_init (&argc, &argv);
         LIBXML_TEST_VERSION;
 
+        ac = ac_auto_correction_new ();
+
         xmlSAXVersion (&sax, 2);
         sax.startElementNs = start_element_ns;
         sax.endElementNs   = end_element_ns;
 
-        xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, NULL);
+        xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, ac);
         /* watch and reload file */
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -835,6 +840,8 @@ main (int   argc,
         gtk_widget_show (window);
 
         gtk_main ();
+
+        g_object_unref (ac);
         return 0;
 }
 
