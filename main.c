@@ -55,6 +55,10 @@ struct _AutoCompletion {
         AutoCompletionFlags  flags;
 };
 
+static AcAutoCorrection* languages[4] = { /* FIXME: symbolic names */
+                NULL, NULL, NULL, NULL
+};
+
 static gboolean save_to_file (AcAutoCorrection* ac,
                               GError          **error);
 
@@ -735,12 +739,25 @@ main (int   argc,
         LIBXML_TEST_VERSION;
 
         ac = ac_auto_correction_new ();
-
         xmlSAXVersion (&sax, 2);
         sax.startElementNs = start_element_ns;
         sax.endElementNs   = end_element_ns;
-
         xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, ac);
+
+        languages[1] = ac_auto_correction_new (); /* FIXME: symbolic names */
+
+        languages[2] = ac_auto_correction_new (); /* FIXME: symbolic names */
+        xmlSAXVersion (&sax, 2);
+        sax.startElementNs = start_element_ns;
+        sax.endElementNs   = end_element_ns;
+        xmlSAXParseFileWithData (&sax, "auto-correct-de.xml", 0, ac);
+
+        languages[3] = ac_auto_correction_new (); /* FIXME: symbolic names */
+        xmlSAXVersion (&sax, 2);
+        sax.startElementNs = start_element_ns;
+        sax.endElementNs   = end_element_ns;
+        xmlSAXParseFileWithData (&sax, "auto-correct-fr.xml", 0, ac);
+
         /* watch and reload file */
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
