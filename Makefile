@@ -23,8 +23,8 @@ check: test-ac Makefile
 	xmllint --nonet --noout --schema XMLSchema.xsd XMLSchema.xsd
 	xmllint --nonet --noout --schema XMLSchema.xsd auto-correct.xsd
 	xmllint --nonet --noout --schema auto-correct.xsd auto-correct.xml
-	gtester --verbose $<
-	valgrind --leak-check=full ./$<
+	G_DEBUG="gc-friendly" G_SLICE="debug-blocks" gtester --verbose $<
+	G_DEBUG="gc-friendly" G_SLICE="always-malloc" valgrind --leak-check=full ./$<
 
 clean:
 	rm -rf auto-correct
