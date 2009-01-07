@@ -23,6 +23,9 @@
 
 #include "ac-auto-correction.h"
 
+#include <string.h>
+#include <libxml/parser.h>
+
 struct _AcAutoCorrectionPrivate {
         GList* corrections;
 };
@@ -48,6 +51,108 @@ ac_auto_correction_new (void)
 {
         return g_object_new (AC_TYPE_AUTO_CORRECTION,
                              NULL);
+}
+
+static void
+start_element_ns (gpointer      ctxt,
+                  guchar const* local_name,
+                  guchar const* prefix,
+                  guchar const* uri,
+                  int           n_namespaces,
+                  guchar const**namespaces,
+                  int           n_attributes,
+                  int           n_defaulted,
+                  guchar const**attributes)
+{
+        AcAutoCorrection* ac;
+
+        g_return_if_fail (g_strcmp0 ("http://www.adeal.eu/auto-correct/0.0.1", (gchar const*)uri) == 0);
+
+        ac = AC_AUTO_CORRECTION (((xmlParserCtxt*)(ctxt))->_private);
+
+        if (!strcmp ("entry", (gchar const*)local_name)) {
+                AutoCompletion* cmp = g_slice_new0 (AutoCompletion);
+                gint i;
+
+                for (i = 0; i < n_attributes; i++) {
+                        if (g_strcmp0 ("before", (gchar const*)attributes[5*i]) == 0) {
+                                g_return_if_fail (!cmp->before);
+                                cmp->before = g_strndup ((gchar*)attributes[5*i+3],
+                                                         attributes[5*i+4] - attributes[5*i+3]);
+                        } else if (g_strcmp0 ("after", (gchar const*)attributes[5*i]) == 0) {
+                                g_return_if_fail (!cmp->after);
+                                cmp->after = g_strndup ((gchar*)attributes[5*i+3],
+                                                        attributes[5*i+4] - attributes[5*i+3]);
+                        } else if (g_strcmp0 ("flags", (gchar const*)attributes[5*i]) == 0) {
+                                gchar* value = g_strndup ((gchar*)attributes[5*i+3],
+                                                          attributes[5*i+4] - attributes[5*i+3]);
+                                gchar**values = g_strsplit (value, " ", 0);
+                                gchar**iter;
+                                for (iter = values; *iter; iter++) {
+                                        if (g_strcmp0 ("after-whitespace", *iter) == 0) {
+                                                cmp->flags |= AUTO_COMPLETION_AFTER_WHITESPACE;
+                                        } else {
+                                                g_assert_not_reached ();
+                                        }
+                                }
+                                g_strfreev (values);
+                                g_free (value);
+                        } else {
+                                g_assert_not_reached ();
+                        }
+                }
+
+                g_return_if_fail (cmp->before != NULL);
+                g_return_if_fail (cmp->after  != NULL);
+
+                ac_auto_correction_prepend (ac, cmp);
+        } else if (!strcmp ("auto-correction", (gchar const*)local_name)) {
+#if 0
+                for (i = 0; i < n_namespaces; i++) {
+                        g_print ("\t%s:%s\n", namespaces[2*i], namespaces[2*i+1]);
+                }
+#endif
+        } else {
+                g_assert_not_reached ();
+        }
+}
+
+static void
+end_element_ns (gpointer      ctxt,
+                  guchar const* local_name,
+                  guchar const* prefix,
+                  guchar const* uri)
+{
+        g_return_if_fail (g_strcmp0 ("http://www.adeal.eu/auto-correct/0.0.1", (gchar const*)uri) == 0);
+
+        if (!g_strcmp0 ("entry", (gchar const*)local_name)) {
+        } else if (!g_strcmp0 ("auto-correction", (gchar const*)local_name)) {
+                ac_auto_correction_reverse (AC_AUTO_CORRECTION (((xmlParserCtxt*)(ctxt))->_private));
+        }
+}
+
+AcAutoCorrection*
+ac_auto_correction_new_from_path (gchar const* path,
+                                  GError     **error)
+{
+        AcAutoCorrection* self;
+        xmlSAXHandler     sax;
+
+        g_return_val_if_fail (path != NULL, NULL);
+        g_return_val_if_fail (!error || !*error, NULL);
+
+        self = ac_auto_correction_new ();
+
+        xmlSAXVersion (&sax, 2);
+        sax.startElementNs = start_element_ns;
+        sax.endElementNs   = end_element_ns;
+        xmlSAXParseFileWithData (&sax, path, 0, self);
+
+        /* FIXME: watch and reload file */
+
+        /* FIXME: use the error to return a message from the XML parser */
+
+        return self;
 }
 
 GList*

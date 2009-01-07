@@ -43,6 +43,8 @@ typedef struct _AutoCompletion AutoCompletion;
 
 GType             ac_auto_correction_get_type        (void);
 AcAutoCorrection* ac_auto_correction_new             (void);
+AcAutoCorrection* ac_auto_correction_new_from_path   (gchar const     * path,
+                                                      GError          **error);
 GList*            ac_auto_correction_get_corrections (AcAutoCorrection* self);
 void              ac_auto_correction_prepend         (AcAutoCorrection* self,
                                                       AutoCompletion  * cmp);
@@ -57,6 +59,17 @@ struct _AcAutoCorrection {
 
 struct _AcAutoCorrectionClass {
         GObjectClass             base_class;
+};
+
+typedef enum {
+        AUTO_COMPLETION_NONE = 0,
+        AUTO_COMPLETION_AFTER_WHITESPACE = 1
+} AutoCompletionFlags;
+
+struct _AutoCompletion {
+        gchar const        * before;
+        gchar const        * after;
+        AutoCompletionFlags  flags;
 };
 
 G_END_DECLS

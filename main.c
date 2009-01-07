@@ -23,9 +23,9 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <libxml/parser.h>
 #include <libxml/xmlversion.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
@@ -43,17 +43,6 @@ static gboolean auto_complete = FALSE;
 static GtkWidget* dialog_entry_before = NULL;
 static GtkWidget* dialog_entry_after  = NULL;
 static GtkWidget* dialog_button_add   = NULL;
-
-typedef enum {
-        AUTO_COMPLETION_NONE = 0,
-        AUTO_COMPLETION_AFTER_WHITESPACE = 1
-} AutoCompletionFlags;
-
-struct _AutoCompletion {
-        gchar const        * before;
-        gchar const        * after;
-        AutoCompletionFlags  flags;
-};
 
 static AcAutoCorrection* languages[4] = { /* FIXME: symbolic names */
                 NULL, NULL, NULL, NULL
@@ -167,84 +156,6 @@ entry_text_deleted (GtkEntry  * entry,
                     gpointer    user_data G_GNUC_UNUSED)
 {
         /* FIXME: potentially check for mark and undo completion */
-}
-
-static void
-start_element_ns (gpointer      ctxt,
-                  guchar const* local_name,
-                  guchar const* prefix,
-                  guchar const* uri,
-                  int           n_namespaces,
-                  guchar const**namespaces,
-                  int           n_attributes,
-                  int           n_defaulted,
-                  guchar const**attributes)
-{
-        AcAutoCorrection* ac;
-
-        g_return_if_fail (g_strcmp0 ("http://www.adeal.eu/auto-correct/0.0.1", (gchar const*)uri) == 0);
-
-        ac = AC_AUTO_CORRECTION (((xmlParserCtxt*)(ctxt))->_private);
-
-        if (!strcmp ("entry", (gchar const*)local_name)) {
-                AutoCompletion* cmp = g_slice_new0 (AutoCompletion);
-                gint i;
-
-                for (i = 0; i < n_attributes; i++) {
-                        if (g_strcmp0 ("before", (gchar const*)attributes[5*i]) == 0) {
-                                g_return_if_fail (!cmp->before);
-                                cmp->before = g_strndup ((gchar*)attributes[5*i+3],
-                                                         attributes[5*i+4] - attributes[5*i+3]);
-                        } else if (g_strcmp0 ("after", (gchar const*)attributes[5*i]) == 0) {
-                                g_return_if_fail (!cmp->after);
-                                cmp->after = g_strndup ((gchar*)attributes[5*i+3],
-                                                        attributes[5*i+4] - attributes[5*i+3]);
-                        } else if (g_strcmp0 ("flags", (gchar const*)attributes[5*i]) == 0) {
-                                gchar* value = g_strndup ((gchar*)attributes[5*i+3],
-                                                          attributes[5*i+4] - attributes[5*i+3]);
-                                gchar**values = g_strsplit (value, " ", 0);
-                                gchar**iter;
-                                for (iter = values; *iter; iter++) {
-                                        if (g_strcmp0 ("after-whitespace", *iter) == 0) {
-                                                cmp->flags |= AUTO_COMPLETION_AFTER_WHITESPACE;
-                                        } else {
-                                                g_assert_not_reached ();
-                                        }
-                                }
-                                g_strfreev (values);
-                                g_free (value);
-                        } else {
-                                g_assert_not_reached ();
-                        }
-                }
-
-                g_return_if_fail (cmp->before != NULL);
-                g_return_if_fail (cmp->after  != NULL);
-
-                ac_auto_correction_prepend (ac, cmp);
-        } else if (!strcmp ("auto-correction", (gchar const*)local_name)) {
-#if 0
-                for (i = 0; i < n_namespaces; i++) {
-                        g_print ("\t%s:%s\n", namespaces[2*i], namespaces[2*i+1]);
-                }
-#endif
-        } else {
-                g_assert_not_reached ();
-        }
-}
-
-static void
-end_element_ns (gpointer      ctxt,
-                  guchar const* local_name,
-                  guchar const* prefix,
-                  guchar const* uri)
-{
-        g_return_if_fail (g_strcmp0 ("http://www.adeal.eu/auto-correct/0.0.1", (gchar const*)uri) == 0);
-
-        if (!g_strcmp0 ("entry", (gchar const*)local_name)) {
-        } else if (!g_strcmp0 ("auto-correction", (gchar const*)local_name)) {
-                ac_auto_correction_reverse (AC_AUTO_CORRECTION (((xmlParserCtxt*)(ctxt))->_private));
-        }
 }
 
 static void
@@ -733,32 +644,14 @@ main (int   argc,
         GString      * string;
         GError       * error = NULL;
         GList         * completion;
-        xmlSAXHandler   sax;
 
         gtk_init (&argc, &argv);
         LIBXML_TEST_VERSION;
 
-        ac = ac_auto_correction_new ();
-        xmlSAXVersion (&sax, 2);
-        sax.startElementNs = start_element_ns;
-        sax.endElementNs   = end_element_ns;
-        xmlSAXParseFileWithData (&sax, "auto-correct.xml", 0, ac);
-
+        ac = ac_auto_correction_new_from_path ("auto-correct.xml", &error);
         languages[1] = ac_auto_correction_new (); /* FIXME: symbolic names */
-
-        languages[2] = ac_auto_correction_new (); /* FIXME: symbolic names */
-        xmlSAXVersion (&sax, 2);
-        sax.startElementNs = start_element_ns;
-        sax.endElementNs   = end_element_ns;
-        xmlSAXParseFileWithData (&sax, "auto-correct-de.xml", 0, ac);
-
-        languages[3] = ac_auto_correction_new (); /* FIXME: symbolic names */
-        xmlSAXVersion (&sax, 2);
-        sax.startElementNs = start_element_ns;
-        sax.endElementNs   = end_element_ns;
-        xmlSAXParseFileWithData (&sax, "auto-correct-fr.xml", 0, ac);
-
-        /* watch and reload file */
+        languages[2] = ac_auto_correction_new_from_path ("auto-correct-de.xml", &error); /* FIXME: symbolic names */
+        languages[3] = ac_auto_correction_new_from_path ("auto-correct-fr.xml", &error); /* FIXME: symbolic names */
 
         window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
         g_object_set_data (G_OBJECT (window),
