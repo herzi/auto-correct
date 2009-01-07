@@ -82,6 +82,29 @@ ac_prepend (void)
         g_object_unref (ac);
 }
 
+static void
+ac_remove (void)
+{
+        /* FIXME: check error condition */
+        AcAutoCorrection* ac = ac_auto_correction_new_from_path ("auto-correct-de.xml", NULL);
+        AutoCompletion* cmp;
+
+        g_assert (AC_IS_AUTO_CORRECTION (ac));
+        g_assert (g_list_length (ac_auto_correction_get_corrections (ac)) == 2);
+
+        cmp = ac_auto_correction_get_corrections (ac)->next->data;
+        ac_auto_correction_remove (ac, cmp);
+
+        g_assert (g_list_length (ac_auto_correction_get_corrections (ac)) == 1);
+        g_assert (ac_auto_correction_get_corrections (ac)->data != cmp);
+
+        ac_auto_correction_remove (ac, ac_auto_correction_get_corrections (ac)->data);
+
+        g_assert (!ac_auto_correction_get_corrections (ac));
+
+        g_object_unref (ac);
+}
+
 int
 main (int   argc,
       char**argv)
@@ -96,8 +119,10 @@ main (int   argc,
         g_test_add_func ("/auto-correction/list/prepend", ac_prepend);
 #if 0
         g_test_add_func ("/auto-correction/list/append", ac_append);
+#endif
         g_test_add_func ("/auto-correction/list/remove", ac_remove);
 
+#if 0
         g_test_add_func ("/auto-correction/merge", ac_merge);
 #endif
         return g_test_run ();
