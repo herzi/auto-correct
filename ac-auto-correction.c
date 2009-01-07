@@ -105,6 +105,7 @@ start_element_ns (gpointer      ctxt,
                 g_return_if_fail (cmp->before != NULL);
                 g_return_if_fail (cmp->after  != NULL);
 
+                /* FIXME: use a GQueue and append properly */
                 ac_auto_correction_prepend (ac, cmp);
         } else if (!strcmp ("auto-correction", (gchar const*)local_name)) {
 #if 0
