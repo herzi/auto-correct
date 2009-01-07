@@ -25,13 +25,29 @@
 
 #include <glib.h>
 
+#include "ac-auto-correction.h"
+
+static void
+ac_new (void)
+{
+        AcAutoCorrection* ac = ac_auto_correction_new ();
+
+        g_assert (AC_IS_AUTO_CORRECTION (ac));
+        g_assert (!ac_auto_correction_get_corrections (ac));
+
+        g_object_unref (ac);
+}
+
 int
 main (int   argc,
       char**argv)
 {
         g_test_init (&argc, &argv, NULL);
-#if 0
+
+        g_type_init ();
+
         g_test_add_func ("/auto-correction/new", ac_new);
+#if 0
         g_test_add_func ("/auto-correction/new-from-path", ac_new_from_path);
 
         g_test_add_func ("/auto-correction/list/prepend", ac_prepend);
