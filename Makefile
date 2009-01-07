@@ -12,11 +12,11 @@ test_ac_SOURCES=\
 	$(NULL)
 
 auto-correct: $(auto_correct_SOURCES) Makefile
-	gcc -O2 -Wall -o $@ $(auto_correct_SOURCES) $(shell pkg-config --cflags --libs gtk+-2.0 libxml-2.0) \
+	gcc -g -O2 -Wall -o $@ $(auto_correct_SOURCES) $(shell pkg-config --cflags --libs gtk+-2.0 libxml-2.0) \
 		|| rm $@
 
 test-ac: $(test_ac_SOURCES) Makefile
-	gcc -O2 -Wall -o $@ $(test_ac_SOURCES) $(shell pkg-config --cflags --libs gtk+-2.0 libxml-2.0) \
+	gcc -g -O2 -Wall -o $@ $(test_ac_SOURCES) $(shell pkg-config --cflags --libs gtk+-2.0 libxml-2.0) \
 		|| rm $@
 
 check: test-ac Makefile
