@@ -118,6 +118,13 @@ start_element_ns (gpointer      ctxt,
 }
 
 static void
+ac_auto_correction_reverse (AcAutoCorrection* self)
+{
+        g_return_if_fail (AC_IS_AUTO_CORRECTION (self));
+
+        P (self)->corrections = g_list_reverse (P (self)->corrections);
+}
+static void
 end_element_ns (gpointer      ctxt,
                   guchar const* local_name,
                   guchar const* prefix,
@@ -184,10 +191,3 @@ ac_auto_correction_remove (AcAutoCorrection* self,
         P (self)->corrections = g_list_remove (P (self)->corrections, cmp);
 }
 
-void
-ac_auto_correction_reverse (AcAutoCorrection* self)
-{
-        g_return_if_fail (AC_IS_AUTO_CORRECTION (self));
-
-        P (self)->corrections = g_list_reverse (P (self)->corrections);
-}

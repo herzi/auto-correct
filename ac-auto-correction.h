@@ -50,7 +50,6 @@ void              ac_auto_correction_prepend         (AcAutoCorrection* self,
                                                       AutoCompletion  * cmp);
 void              ac_auto_correction_remove          (AcAutoCorrection* self,
                                                       AutoCompletion  * cmp);
-void              ac_auto_correction_reverse         (AcAutoCorrection* self);
 
 struct _AcAutoCorrection {
         GObject                  base_instance;
