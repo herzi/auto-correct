@@ -41,8 +41,15 @@ ac_auto_correction_init (AcAutoCorrection* self)
 }
 
 static void
+free_completion (AutoCompletion* c)
+{
+        g_slice_free (AutoCompletion, c);
+}
+
+static void
 correction_finalize (GObject* object)
 {
+        g_list_foreach (P (object)->corrections, (GFunc)free_completion, NULL);
         g_list_free (P (object)->corrections);
 
         G_OBJECT_CLASS (ac_auto_correction_parent_class)->finalize (object);
