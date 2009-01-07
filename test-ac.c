@@ -62,8 +62,8 @@ ac_prepend (void)
         g_assert (!ac_auto_correction_get_corrections (ac));
 
         cmp = g_slice_new0 (AutoCompletion);
-        cmp->before = "sliff";
-        cmp->after  = "sloff";
+        cmp->before = g_strdup ("sliff");
+        cmp->after  = g_strdup ("sloff");
 
         ac_auto_correction_prepend (ac, cmp);
 
@@ -71,8 +71,8 @@ ac_prepend (void)
         g_assert (ac_auto_correction_get_corrections (ac)->data == cmp);
 
         cmp = g_slice_new0 (AutoCompletion);
-        cmp->before = "foo";
-        cmp->after  = "bar";
+        cmp->before = g_strdup ("foo");
+        cmp->after  = g_strdup ("bar");
 
         ac_auto_correction_prepend (ac, cmp);
 
