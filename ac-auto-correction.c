@@ -44,6 +44,7 @@ static void
 free_completion (AutoCompletion* c)
 {
         g_free (c->before);
+        g_free (c->after);
         g_slice_free (AutoCompletion, c);
 }
 
