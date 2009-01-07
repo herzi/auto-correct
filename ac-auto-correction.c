@@ -118,13 +118,6 @@ start_element_ns (gpointer      ctxt,
 }
 
 static void
-ac_auto_correction_reverse (AcAutoCorrection* self)
-{
-        g_return_if_fail (AC_IS_AUTO_CORRECTION (self));
-
-        P (self)->corrections = g_list_reverse (P (self)->corrections);
-}
-static void
 end_element_ns (gpointer      ctxt,
                   guchar const* local_name,
                   guchar const* prefix,
@@ -134,7 +127,8 @@ end_element_ns (gpointer      ctxt,
 
         if (!g_strcmp0 ("entry", (gchar const*)local_name)) {
         } else if (!g_strcmp0 ("auto-correction", (gchar const*)local_name)) {
-                ac_auto_correction_reverse (AC_AUTO_CORRECTION (((xmlParserCtxt*)(ctxt))->_private));
+                AcAutoCorrection* self = AC_AUTO_CORRECTION (((xmlParserCtxt*)(ctxt))->_private);
+                P (self)->corrections = g_list_reverse (P (self)->corrections);
         }
 }
 
