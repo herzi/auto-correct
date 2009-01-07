@@ -38,6 +38,20 @@ ac_new (void)
         g_object_unref (ac);
 }
 
+static void
+ac_new_from_path (void)
+{
+        /* FIXME: test error conditions, too */
+        AcAutoCorrection* ac = ac_auto_correction_new_from_path ("auto-correct-de.xml", NULL);
+
+        g_assert (AC_IS_AUTO_CORRECTION (ac));
+        g_assert (g_list_length (ac_auto_correction_get_corrections (ac)) == 2);
+
+        /* FIXME: query children */
+
+        g_object_unref (ac);
+}
+
 int
 main (int   argc,
       char**argv)
@@ -47,9 +61,9 @@ main (int   argc,
         g_type_init ();
 
         g_test_add_func ("/auto-correction/new", ac_new);
-#if 0
         g_test_add_func ("/auto-correction/new-from-path", ac_new_from_path);
 
+#if 0
         g_test_add_func ("/auto-correction/list/prepend", ac_prepend);
         g_test_add_func ("/auto-correction/list/append", ac_append);
         g_test_add_func ("/auto-correction/list/remove", ac_remove);
