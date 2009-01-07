@@ -123,7 +123,19 @@ main (int   argc,
         g_test_add_func ("/auto-correction/list/remove", ac_remove);
 
 #if 0
-        g_test_add_func ("/auto-correction/merge", ac_merge);
+        g_test_add_func ("/auto-correction/merge/disjunct", ac_merge_disjunct);
+        g_test_add_func ("/auto-correction/merge/equal", ac_merge_equal);
+        g_test_add_func ("/auto-correction/merge/subset", ac_merge_subset);
+        g_test_add_func ("/auto-correction/merge/superset", ac_merge_superset);
+        g_test_add_func ("/auto-correction/merge/intersected", ac_merge_intersected);
+
+        g_test_add_func ("/auto-correction/merge/append-real");
+        g_test_add_func ("/auto-correction/merge/prepend-real");
+        g_test_add_func ("/auto-correction/merge/remove-real");
+
+        g_test_add_func ("/auto-correction/merge/append-proxied");
+        g_test_add_func ("/auto-correction/merge/prepend-proxied");
+        g_test_add_func ("/auto-correction/merge/remove-proxied");
 #endif
         return g_test_run ();
 }
