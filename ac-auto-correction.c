@@ -43,6 +43,7 @@ ac_auto_correction_init (AcAutoCorrection* self)
 static void
 free_completion (AutoCompletion* c)
 {
+        g_free (c->before);
         g_slice_free (AutoCompletion, c);
 }
 

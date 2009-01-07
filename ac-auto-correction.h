@@ -66,8 +66,8 @@ typedef enum {
 } AutoCompletionFlags;
 
 struct _AutoCompletion {
-        gchar const        * before;
-        gchar const        * after;
+        gchar              * before;
+        gchar              * after;
         AutoCompletionFlags  flags;
 };
 
