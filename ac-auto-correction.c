@@ -146,8 +146,10 @@ ac_auto_correction_new_from_path (gchar const* path,
         self = ac_auto_correction_new ();
 
         xmlSAXVersion (&sax, 2);
+        sax.startDocument  = NULL;
         sax.startElementNs = start_element_ns;
         sax.endElementNs   = end_element_ns;
+        sax.comment        = NULL;
         xmlSAXParseFileWithData (&sax, path, 0, self);
 
         /* FIXME: watch and reload file */
