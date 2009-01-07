@@ -94,11 +94,14 @@ ac_remove (void)
 
         cmp = ac_auto_correction_get_corrections (ac)->next->data;
         ac_auto_correction_remove (ac, cmp);
+        auto_completion_free (cmp);
 
         g_assert (g_list_length (ac_auto_correction_get_corrections (ac)) == 1);
         g_assert (ac_auto_correction_get_corrections (ac)->data != cmp);
 
-        ac_auto_correction_remove (ac, ac_auto_correction_get_corrections (ac)->data);
+        cmp = ac_auto_correction_get_corrections (ac)->data;
+        ac_auto_correction_remove (ac, cmp);
+        auto_completion_free (cmp);
 
         g_assert (!ac_auto_correction_get_corrections (ac));
 

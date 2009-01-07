@@ -51,6 +51,8 @@ void              ac_auto_correction_prepend         (AcAutoCorrection* self,
 void              ac_auto_correction_remove          (AcAutoCorrection* self,
                                                       AutoCompletion  * cmp);
 
+void              auto_completion_free               (AutoCompletion  * self);
+
 struct _AcAutoCorrection {
         GObject                  base_instance;
         AcAutoCorrectionPrivate* _private;
