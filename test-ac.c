@@ -52,6 +52,36 @@ ac_new_from_path (void)
         g_object_unref (ac);
 }
 
+static void
+ac_prepend (void)
+{
+        AcAutoCorrection* ac = ac_auto_correction_new ();
+        AutoCompletion* cmp;
+
+        g_assert (AC_IS_AUTO_CORRECTION (ac));
+        g_assert (!ac_auto_correction_get_corrections (ac));
+
+        cmp = g_slice_new0 (AutoCompletion);
+        cmp->before = "sliff";
+        cmp->after  = "sloff";
+
+        ac_auto_correction_prepend (ac, cmp);
+
+        g_assert (g_list_length (ac_auto_correction_get_corrections (ac)) == 1);
+        g_assert (ac_auto_correction_get_corrections (ac)->data == cmp);
+
+        cmp = g_slice_new0 (AutoCompletion);
+        cmp->before = "foo";
+        cmp->after  = "bar";
+
+        ac_auto_correction_prepend (ac, cmp);
+
+        g_assert (g_list_length (ac_auto_correction_get_corrections (ac)) == 2);
+        g_assert (ac_auto_correction_get_corrections (ac)->data == cmp);
+
+        g_object_unref (ac);
+}
+
 int
 main (int   argc,
       char**argv)
@@ -63,8 +93,8 @@ main (int   argc,
         g_test_add_func ("/auto-correction/new", ac_new);
         g_test_add_func ("/auto-correction/new-from-path", ac_new_from_path);
 
-#if 0
         g_test_add_func ("/auto-correction/list/prepend", ac_prepend);
+#if 0
         g_test_add_func ("/auto-correction/list/append", ac_append);
         g_test_add_func ("/auto-correction/list/remove", ac_remove);
 
