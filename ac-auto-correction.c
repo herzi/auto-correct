@@ -41,8 +41,20 @@ ac_auto_correction_init (AcAutoCorrection* self)
 }
 
 static void
+correction_finalize (GObject* object)
+{
+        g_list_free (P (object)->corrections);
+
+        G_OBJECT_CLASS (ac_auto_correction_parent_class)->finalize (object);
+}
+
+static void
 ac_auto_correction_class_init (AcAutoCorrectionClass* self_class)
 {
+        GObjectClass* object_class = G_OBJECT_CLASS (self_class);
+
+        object_class->finalize = correction_finalize;
+
         g_type_class_add_private (self_class, sizeof (AcAutoCorrectionPrivate));
 }
 
